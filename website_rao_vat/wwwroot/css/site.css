@@ -29,3 +29,18 @@ body {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+.search-filter-box .form-select,
+.search-filter-box .form-control {
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.search-filter-box .filter-item {
+    min-width: 150px;
+}
+
+.filter-item:hover {
+    background-color: #f8f9fa;
+    border-radius: 50px;
+}

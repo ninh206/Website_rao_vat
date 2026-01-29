@@ -1,0 +1,5 @@
+﻿# Loại bỏ file rác theo tiêu chí chấm điểm
+[Bb]in/
+[Oo]bj/
+.vs/
+*.user

@@ -11,26 +11,71 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">website_rao_vat</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm py-3">
+            <div class="container">
+                <a class="navbar-brand d-flex align-items-center fw-bold text-primary" href="/">
+                    <i class="bi bi-layers-fill me-2"></i> Classifieds
+                </a>
+
+                <div class="flex-grow-1 mx-4">
+                    <form action="/Search" method="get" class="position-relative">
+                        <input type="text" name="query" class="form-control rounded-pill ps-5"
+                               placeholder="Search for anything..." style="background-color: #f8f9fa;">
+                        <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                    </form>
+                </div>
+
+                <div class="d-flex align-items-center">
+                    <ul class="navbar-nav me-3 d-none d-md-flex">
+                        <li class="nav-item"><a class="nav-link text-dark fw-medium" href="#">Electronics</a></li>
+                        <li class="nav-item"><a class="nav-link text-dark fw-medium" href="#">Vehicles</a></li>
                     </ul>
+
+                    <a href="/Account/Login" class="btn btn-link text-dark text-decoration-none fw-bold me-2">Login</a>
+                    <a href="/Ads/Post" class="btn btn-primary rounded-pill px-4 fw-bold">
+                        <i class="bi bi-plus-circle-fill me-1"></i> Post Ad
+                    </a>
                 </div>
             </div>
         </nav>
     </header>
+    <section class="hero-section text-white text-center d-flex align-items-center" style="background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('/images/background_web.png') no-repeat center center; background-size: cover; height: 500px;">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-3">Find anything you need,<br>right in your neighborhood.</h1>
+            <p class="lead mb-5">The simplest way to buy and sell locally. Join thousands of users today.</p>
+
+            <div class="search-filter-box bg-white p-2 rounded-pill shadow-lg mx-auto d-flex align-items-center" style="max-width: 900px;">
+
+                <div class="filter-item flex-grow-1 border-end px-3 d-flex align-items-center">
+                    <i class="bi bi-grid text-primary me-2"></i>
+                    <select class="form-select border-0 shadow-none">
+                        <option selected>All Categories</option>
+                        <option value="1">Real Estate</option>
+                        <option value="2">Electronics</option>
+                    </select>
+                </div>
+
+                <div class="filter-item flex-grow-1 border-end px-3 d-flex align-items-center">
+                    <i class="bi bi-geo-alt text-primary me-2"></i>
+                    <select class="form-select border-0 shadow-none">
+                        <option selected>Select Location</option>
+                        <option value="HN">Hanoi</option>
+                        <option value="HCM">TP. Ho Chi Minh</option>
+                    </select>
+                </div>
+
+                <div class="filter-item flex-grow-1 px-3 d-flex align-items-center">
+                    <i class="bi bi-cash-stack text-primary me-2"></i>
+                    <input type="text" class="form-control border-0 shadow-none" placeholder="Price Range">
+                </div>
+
+                <button class="btn btn-primary rounded-pill px-5 py-2 fw-bold d-flex align-items-center">
+                    <i class="bi bi-search me-2"></i> Search
+                </button>
+            </div>
+        </div>
+    </section>
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
