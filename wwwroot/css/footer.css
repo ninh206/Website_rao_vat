@@ -1,0 +1,104 @@
+﻿/* CTA SECTION */
+.cta-section {
+    background-image: url('/images/cta-bg.jpg');
+    background-size: cover;
+    background-position: center;
+    padding: 90px 20px;
+    text-align: center;
+    border-radius: 24px;
+    margin: 20px;
+}
+
+.cta-content {
+    max-width: 720px;
+    margin: auto;
+}
+
+    .cta-content h2 {
+        font-size: 36px;
+        font-weight: 700;
+        margin-bottom: 12px;
+    }
+
+    .cta-content p {
+        font-size: 16px;
+        color: #555;
+        margin-bottom: 32px;
+        line-height: 1.6;
+    }
+.cta-buttons a {
+    display: inline-block;
+    padding: 14px 28px;
+    margin: 0 10px;
+    border-radius: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background-color: #1e88ff;
+    color: #fff;
+}
+
+    .btn-primary:hover {
+        background-color: #1565c0;
+    }
+
+.btn-secondary {
+    background-color: #fff;
+    color: #333;
+    border: 1px solid #ccc;
+}
+
+    .btn-secondary:hover {
+        background-color: #f2f2f2;
+    }
+
+/* FIX FOOTER LỆCH + ÉP GRID */
+
+.site-footer {
+    background-color: #f9f9f9;
+    padding: 60px 20px 20px;
+    margin-top: 40px;
+    width: 100%;
+}
+
+/* ÉP 4 CỘT */
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 40px;
+}
+
+/* XOÁ DẤU CHẤM */
+.footer-column ul {
+    list-style: none !important;
+    padding: 0;
+    margin: 0;
+}
+
+    /* LINK */
+    .footer-column ul li a {
+        text-decoration: none;
+        color: #555;
+    }
+
+        .footer-column ul li a:hover {
+            color: #1e88ff;
+        }
+
+/* FOOTER BOTTOM */
+.footer-bottom {
+    max-width: 1200px;
+    margin: 30px auto 0;
+    padding-top: 15px;
+    border-top: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: #666;
+}

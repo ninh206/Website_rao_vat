@@ -1,0 +1,99 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ClassifiedsMVC</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/footer.css" asp-append-version="true" />
+</head>
+
+<body>
+
+    <!-- CTA SECTION -->
+    <section class="cta-section">
+        <div class="cta-content">
+            <h2>Got something to sell?</h2>
+            <p>
+                Turn your unwanted items into cash. List for free in under a minute
+                and reach buyers right in your local area.
+            </p>
+
+            <div class="cta-buttons">
+                <a href="#" class="btn-primary">List Your Item Now</a>
+                <a href="#" class="btn-secondary">How it Works</a>
+            </div>
+        </div>
+    </section>
+
+    
+
+    <!-- MAIN -->
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <!-- FOOTER 4 CỘT (PHẦN 4.1) -->
+    <footer class="site-footer">
+        <div class="footer-container">
+
+            <div class="footer-column">
+                <h3 class="footer-logo">Classifieds</h3>
+                <p>
+                    The neighborhood's favorite marketplace for pre-loved items,
+                    real estate, and professional services.
+                </p>
+            </div>
+
+            <div class="footer-column">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="#">Real Estate</a></li>
+                    <li><a href="#">Vehicles</a></li>
+                    <li><a href="#">Electronics</a></li>
+                    <li><a href="#">Home & Garden</a></li>
+                    <li><a href="#">Antiques</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-column">
+                <h4>Support</h4>
+                <ul>
+                    <li><a href="#">Help Center</a></li>
+                    <li><a href="#">Safety Tips</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Contact Us</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-column">
+                <h4>Newsletter</h4>
+                <p>Get the latest deals and listings sent to your inbox.</p>
+
+                <div class="newsletter-box">
+                    <input type="email" placeholder="Your email" />
+                    <button>&#10148;</button>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="footer-bottom">
+            <span>© 2026 ClassifiedsMVC. All rights reserved.</span>
+            <div class="footer-badges">
+                <span>✔ Secure Shopping</span>
+                <span>🔒 Encrypted Messaging</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
+</html>
