@@ -1,0 +1,86 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đăng nhập - Classifieds</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body {
+            background-color: #0a0b0d;
+            color: white;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+
+        .login-card {
+            background: #1a1c1e;
+            border: 1px solid #2d2f31;
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .form-control {
+            background: #0a0b0d !important;
+            border: 1px solid #343a40;
+            color: white !important;
+        }
+
+            .form-control:focus {
+                border-color: #0d6efd;
+                box-shadow: none;
+            }
+
+        .btn-primary {
+            background: #0d6efd;
+            border: none;
+            padding: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container d-flex justify-content-center">
+        <div class="login-card shadow-lg">
+            <div class="text-center mb-4">
+                <i class="bi bi-layers-fill text-primary" style="font-size: 3rem;"></i>
+                <h3 class="mt-2 fw-bold">Classifieds</h3>
+                <p class="text-secondary small">Chào mừng bạn quay trở lại!</p>
+            </div>
+
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert alert-danger py-2 small border-0 mb-3" style="background: rgba(220, 53, 69, 0.1); color: #ea868f;">
+                    <i class="bi bi-exclamation-circle me-2"></i> @ViewBag.Error
+                </div>
+            }
+
+            <form action="/Account/Login" method="post">
+                <div class="mb-3">
+                    <label class="form-label small text-secondary">Tên đăng nhập hoặc Email</label>
+                    <input type="text" name="username" class="form-control" placeholder="Nhập username..." required>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label small text-secondary">Mật khẩu</label>
+                    <input type="password" name="password" class="form-control" placeholder="********" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 mb-3">Đăng nhập</button>
+            </form>
+
+            <div class="text-center">
+                <p class="text-secondary small">
+                    Chưa có tài khoản?
+                    <a href="/Account/Register" class="text-primary text-decoration-none fw-bold">Đăng ký ngay</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

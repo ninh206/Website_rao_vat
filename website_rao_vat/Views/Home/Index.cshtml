@@ -1,8 +1,190 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model IEnumerable<website_rao_vat.Models.Product>
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+
+@{
+    ViewData["Title"] = "Trang chủ - Classifieds";
+    var userId = HttpContextAccessor.HttpContext.Session.GetString("UserId");
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<style>
+    /* Bo góc và đổ bóng cho card */
+    .product-card {
+        background: var(--card-dark);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .product-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--primary-blue);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+    /* Container ảnh cố định tỉ lệ 4:3 */
+    .img-wrapper {
+        position: relative;
+        width: 100%;
+        padding-top: 75%; /* Ratio 4:3 */
+        overflow: hidden;
+        background: #16181a;
+    }
+
+        .img-wrapper img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s ease;
+        }
+
+    .product-card:hover .img-wrapper img {
+        transform: scale(1.1);
+    }
+
+    /* Giá tiền đè lên ảnh */
+    .price-tag {
+        position: absolute;
+        bottom: 12px;
+        left: 12px;
+        background: rgba(13, 110, 253, 0.85);
+        backdrop-filter: blur(8px);
+        color: white;
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        z-index: 2;
+    }
+
+    /* Nút tim */
+    .btn-fav {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 5;
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(4px);
+        border: none;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.2s;
+    }
+
+        .btn-fav:hover {
+            background: rgba(220, 53, 69, 0.2);
+            color: #ff4d5e;
+            transform: scale(1.1);
+        }
+
+    .product-title {
+        font-size: 0.95rem;
+        line-height: 1.4;
+        height: 2.8em; /* Giới hạn 2 dòng chữ */
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>
+
+<div class="mt-5">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h3 class="fw-bold text-white mb-2">Tin đăng mới nhất</h3>
+            <div class="bg-primary" style="height: 4px; width: 60px; border-radius: 10px;"></div>
+        </div>
+        <a href="#" class="btn btn-link text-primary text-decoration-none fw-bold p-0">
+            Xem tất cả <i class="bi bi-chevron-right small"></i>
+        </a>
+    </div>
+
+    <div class="row g-4">
+        @if (Model != null && Model.Any())
+        {
+            @foreach (var item in Model)
+            {
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="product-card">
+                        <button class="btn-fav btn-favorite" data-id="@item.ProductId">
+                            @{
+                                bool isLiked = item.Favorites != null && item.Favorites.Any(f => f.UserId.ToString() == userId);
+                            }
+                            <i class="bi @(isLiked ? "bi-heart-fill text-danger" : "bi-heart")"></i>
+                        </button>
+
+                        <a asp-controller="Home" asp-action="Details" asp-route-id="@item.ProductId" class="text-decoration-none">
+                            <div class="img-wrapper">
+                                <img src="@(item.ProductImages?.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png")" alt="@item.Title">
+                                <div class="price-tag">@item.Price.ToString("N0") đ</div>
+                            </div>
+
+                            <div class="p-3">
+                                <h6 class="product-title text-white fw-bold mb-2">@item.Title</h6>
+                                <div class="d-flex align-items-center text-muted small mt-2">
+                                    <i class="bi bi-geo-alt me-1"></i>
+                                    <span class="text-truncate">@(item.Location ?? "Toàn quốc")</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-2 border-top border-secondary border-opacity-10 pt-2">
+                                    <span class="text-secondary" style="font-size: 0.7rem;">
+                                        <i class="bi bi-clock me-1"></i>@item.CreatedAt?.ToString("dd/MM/yyyy")
+                                    </span>
+                                    <span class="badge bg-dark text-secondary fw-normal" style="font-size: 0.65rem;">Mới</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12">
+                <div class="category-card py-5 text-center border-dashed border-secondary">
+                    <i class="bi bi-inbox text-secondary display-1 mb-3 opacity-25"></i>
+                    <h5 class="text-secondary">Hiện tại chưa có tin đăng nào</h5>
+                    <p class="small text-muted">Hãy là người đầu tiên đăng tin tại khu vực này!</p>
+                    <a asp-controller="Ads" asp-action="Post" class="btn btn-primary rounded-pill px-4 mt-2">Đăng tin ngay</a>
+                </div>
+            </div>
+        }
+    </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).on("click", ".btn-favorite", function (e) {
+            e.preventDefault();
+            var btn = $(this);
+            var icon = btn.find("i");
+            var pId = btn.data("id");
+
+            // Hiệu ứng bấm nút
+            btn.css("transform", "scale(0.8)");
+            setTimeout(() => btn.css("transform", "scale(1.1)"), 100);
+
+            $.post("/Ads/ToggleFavorite", { productId: pId }, function (data) {
+                if (data.success) {
+                    if (data.isFavorite) {
+                        icon.removeClass("bi-heart").addClass("bi-heart-fill text-danger animate__animated animate__heartBeat");
+                    } else {
+                        icon.removeClass("bi-heart-fill text-danger").addClass("bi-heart animate__animated animate__fadeIn");
+                    }
+                } else {
+                    // Nếu chưa login, chuyển hướng
+                    window.location.href = "/Account/Login";
+                }
+            });
+        });
+    </script>
+}

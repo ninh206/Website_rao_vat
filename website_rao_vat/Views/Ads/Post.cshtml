@@ -1,0 +1,60 @@
+﻿@model website_rao_vat.Models.AdPostViewModel
+
+@{
+    ViewData["Title"] = "Đăng tin mới";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="category-card p-5 shadow-lg">
+                <h2 class="fw-bold mb-4"><i class="bi bi-plus-circle text-primary me-2"></i> Đăng tin rao vặt</h2>
+
+                <form asp-action="Post" method="post" enctype="multipart/form-data">
+                    <div class="row g-4">
+                        <div class="col-12">
+                            <label class="form-label small text-secondary fw-bold">TIÊU ĐỀ TIN ĐĂNG</label>
+                            <input type="text" asp-for="Title" class="form-control bg-dark border-secondary border-opacity-25 text-white py-3" placeholder="Ví dụ: Cần bán xe Wave Alpha 2022..." required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small text-secondary fw-bold">DANH MỤC</label>
+                            <select asp-for="CategoryId" asp-items="ViewBag.Categories" class="form-select bg-dark border-secondary border-opacity-25 text-white py-3">
+                                <option value="">-- Chọn danh mục --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-secondary fw-bold">GIÁ BÁN (VNĐ)</label>
+                            <input type="number" asp-for="Price" class="form-control bg-dark border-secondary border-opacity-25 text-white py-3" placeholder="0" required>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small text-secondary fw-bold">ĐỊA ĐIỂM</label>
+                            <input type="text" asp-for="Location" class="form-control bg-dark border-secondary border-opacity-25 text-white py-3" placeholder="Quận/Huyện, Tỉnh/Thành phố..." required>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small text-secondary fw-bold">HÌNH ẢNH SẢN PHẨM (Chọn nhiều ảnh)</label>
+                            <div class="border border-secondary border-dashed rounded-3 p-4 text-center" style="border-style: dashed !important;">
+                                <i class="bi bi-cloud-arrow-up fs-1 text-primary"></i>
+                                <input type="file" asp-for="Images" multiple class="form-control mt-2 bg-transparent border-0 text-secondary shadow-none">
+                                <p class="small text-muted mt-2">Định dạng hỗ trợ: JPG, PNG. Tối đa 5 ảnh.</p>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small text-secondary fw-bold">MÔ TẢ CHI TIẾT</label>
+                            <textarea asp-for="Description" rows="5" class="form-control bg-dark border-secondary border-opacity-25 text-white py-3" placeholder="Mô tả tình trạng, thông số kỹ thuật, bảo hành..."></textarea>
+                        </div>
+
+                        <div class="col-12 mt-5">
+                            <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold py-3">
+                                <i class="bi bi-megaphone me-2"></i> ĐĂNG TIN NGAY
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,50 @@
+﻿@model website_rao_vat.Models.User
+@{
+    ViewData["Title"] = "Chỉnh sửa tài khoản";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="category-card p-5 shadow-lg border border-secondary border-opacity-10">
+            <h4 class="fw-bold mb-4 text-white text-center">
+                <i class="bi bi-person-gear me-2 text-primary"></i>Sửa thông tin: @Model.FullName
+            </h4>
+
+            <form asp-action="EditUser" method="post">
+                @Html.AntiForgeryToken()
+                @* Quan trọng: Phải có UserId ẩn để Controller biết đang sửa ai *@
+                <input type="hidden" name="UserId" value="@Model.UserId" />
+
+                <div class="mb-3">
+                    <label class="form-label small text-secondary fw-bold">TÊN ĐĂNG NHẬP</label>
+                    <input asp-for="Username" class="form-control bg-dark border-secondary text-white py-2" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small text-secondary fw-bold">HỌ VÀ TÊN</label>
+                    <input asp-for="FullName" class="form-control bg-dark border-secondary text-white py-2" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small text-secondary fw-bold">EMAIL</label>
+                    <input asp-for="Email" class="form-control bg-dark border-secondary text-white py-2" />
+                </div>
+
+                <div class="mb-4 mt-4 p-3 border border-warning border-opacity-25 rounded-3 bg-warning bg-opacity-5">
+                    <label class="form-label small text-warning fw-bold">
+                        <i class="bi bi-shield-lock-fill me-1"></i> ĐẶT LẠI MẬT KHẨU MỚI
+                    </label>
+                    @* name="newPassword" phải khớp với tham số trong Controller *@
+                    <input type="text" name="newPassword" class="form-control bg-dark border-warning border-opacity-25 text-white"
+                           placeholder="Nhập mật khẩu mới nếu muốn đổi...">
+                    <div class="form-text text-muted small">Để trống nếu không muốn thay đổi mật khẩu.</div>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                    <a href="/Admin/Index" class="btn btn-outline-light px-4">Quay lại</a>
+                    <button type="submit" class="btn btn-primary px-5 fw-bold">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

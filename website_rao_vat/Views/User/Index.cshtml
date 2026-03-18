@@ -1,0 +1,142 @@
+﻿@model website_rao_vat.Models.UserProfileViewModel
+
+@{
+    ViewData["Title"] = "Quản lý cá nhân";
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-3">
+            <div class="category-card p-4 text-center mb-4">
+                <i class="bi bi-person-circle text-primary" style="font-size: 4rem;"></i>
+                <h5 class="fw-bold mt-3">@Model.User.FullName</h5>
+                <p class="text-secondary small">@Model.User.Email</p>
+                <hr class="border-secondary opacity-25">
+
+                <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist">
+                    <button class="nav-link active text-start" data-bs-toggle="pill" data-bs-target="#tab-posts">
+                        <i class="bi bi-collection me-2"></i> Tin đăng của tôi
+                    </button>
+                    <button class="nav-link text-start" data-bs-toggle="pill" data-bs-target="#tab-favorites">
+                        <i class="bi bi-heart-fill text-danger me-2"></i> Tin đã yêu thích
+                    </button>
+                    <button class="nav-link text-start" data-bs-toggle="pill" data-bs-target="#tab-profile">
+                        <i class="bi bi-gear me-2"></i> Hồ sơ & Mật khẩu
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-9">
+            @if (TempData["Message"] != null)
+            {
+                <div class="alert alert-success border-0 bg-success bg-opacity-10 text-success shadow-sm">
+                    <i class="bi bi-check-circle me-2"></i>@TempData["Message"]
+                </div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger border-0 bg-danger bg-opacity-10 text-danger shadow-sm">
+                    <i class="bi bi-exclamation-triangle me-2"></i>@TempData["Error"]
+                </div>
+            }
+
+            <div class="tab-content" id="v-pills-tabContent">
+
+                <div class="tab-pane fade show active" id="tab-posts">
+                    <h4 class="fw-bold mb-4 text-white">Quản lý tin đăng (@Model.MyProducts.Count)</h4>
+                    @if (Model.MyProducts.Any())
+                    {
+                        @foreach (var item in Model.MyProducts)
+                        {
+                            <div class="category-card p-3 mb-3 d-flex align-items-center justify-content-between border border-secondary border-opacity-10">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded bg-dark me-3" style="width: 80px; height: 60px; overflow: hidden; position: relative;">
+                                        @if (item.ProductImages != null && item.ProductImages.Any())
+                                        {
+                                            <img src="@item.ProductImages.First().ImageUrl" class="w-100 h-100 object-fit-cover">
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-image text-secondary d-flex justify-content-center mt-3"></i>
+                                        }
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-1 text-white">@item.Title</h6>
+                                        <span class="text-primary fw-bold">@item.Price.ToString("N0") đ</span>
+                                        <small class="text-muted ms-3">@item.CreatedAt?.ToString("dd/MM/yyyy")</small>
+                                    </div>
+                                </div>
+                                <div class="btn-group gap-2">
+                                    <a href="/Ads/Edit/@item.ProductId" class="btn btn-outline-light btn-sm px-3 rounded-pill">Sửa</a>
+                                    <form asp-action="DeletePost" asp-route-id="@item.ProductId" method="post" onsubmit="return confirm('Xóa tin này vĩnh viễn?')">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm px-3 rounded-pill">Xóa</button>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center py-5 border border-secondary border-dashed rounded-3">
+                            <p class="text-muted">Bạn chưa đăng tin nào.</p>
+                            <a href="/Ads/Post" class="btn btn-primary btn-sm">Đăng tin ngay</a>
+                        </div>
+                    }
+                </div>
+
+                <div class="tab-pane fade" id="tab-favorites">
+                    <h4 class="fw-bold mb-4 text-white">Tin đăng đã thích (@Model.SavedAds.Count)</h4>
+                    @if (Model.SavedAds.Any())
+                    {
+                        @foreach (var fav in Model.SavedAds)
+                        {
+                            <div class="category-card p-3 mb-3 d-flex align-items-center justify-content-between border border-secondary border-opacity-10">
+                                <div class="d-flex align-items-center">
+                                    <img src="@(fav.ProductImages?.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png")"
+                                         style="width: 80px; height: 60px; object-fit: cover;" class="rounded me-3">
+                                    <div>
+                                        <h6 class="fw-bold mb-1"><a href="/Home/Details/@fav.ProductId" class="text-white text-decoration-none">@fav.Title</a></h6>
+                                        <p class="text-primary fw-bold mb-0">@fav.Price.ToString("N0") đ</p>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <a href="/Home/Details/@fav.ProductId" class="btn btn-sm btn-primary px-4 rounded-pill">Xem tin</a>
+                                    <button class="btn btn-sm btn-outline-danger border-0 btn-favorite" data-id="@fav.ProductId">
+                                        <i class="bi bi-heart-fill"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center py-5 border border-secondary border-dashed rounded-3">
+                            <i class="bi bi-heart text-secondary fs-1 mb-3 d-block"></i>
+                            <p class="text-muted">Bạn chưa lưu tin đăng nào.</p>
+                        </div>
+                    }
+                </div>
+
+                <div class="tab-pane fade" id="tab-profile">
+                    <div class="category-card p-4">
+                        <h4 class="fw-bold mb-4 text-white">Cấu hình bảo mật</h4>
+                        <form asp-action="ChangePassword" method="post" style="max-width: 450px;">
+                            <div class="mb-3">
+                                <label class="form-label small text-secondary fw-bold">MẬT KHẨU HIỆN TẠI</label>
+                                <input type="password" name="oldPass" class="form-control bg-dark border-secondary border-opacity-25 text-white py-2" required>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label small text-secondary fw-bold">MẬT KHẨU MỚI</label>
+                                <input type="password" name="newPass" class="form-control bg-dark border-secondary border-opacity-25 text-white py-2" required>
+                                <div class="form-text text-muted" style="font-size: 0.75rem;">Mật khẩu nên chứa ít nhất 6 ký tự.</div>
+                            </div>
+                            <button type="submit" class="btn btn-primary px-5 py-2 fw-bold">CẬP NHẬT MẬT KHẨU</button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
