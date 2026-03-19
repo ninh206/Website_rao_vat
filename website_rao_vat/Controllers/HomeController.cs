@@ -17,38 +17,70 @@ namespace website_rao_vat.Controllers
             _context = context;
         }
 
+        // ==========================================
+        // 1. TRANG CHỦ (INDEX)
+        // ==========================================
         public async Task<IActionResult> Index()
         {
-            // 1. Chặn Admin (Cái này ông làm đúng rồi)
+            // Bảo mật: Nếu là Admin thì đẩy vào trang quản trị luôn
             if (HttpContext.Session.GetString("UserRole") == "Admin")
             {
                 return RedirectToAction("Index", "Admin");
             }
 
-            // 2. LẤY DỮ LIỆU: Phải có đoạn này để lấy tin đăng ra
+            var userIdStr = HttpContext.Session.GetString("UserId");
+
+            // Lấy 12 sản phẩm mới nhất
             var products = await _context.Products
-                .Include(p => p.ProductImages) // Lấy kèm ảnh
-                .Include(p => p.User)           // Lấy kèm thông tin người đăng
-                .OrderByDescending(p => p.CreatedAt) // Tin mới nhất lên đầu
-                .Take(8) // Lấy 8 tin thôi cho đẹp
+                .Include(p => p.ProductImages)
+                .Include(p => p.Favorites)
+                .OrderByDescending(p => p.CreatedAt)
+                .Take(12)
                 .ToListAsync();
 
-            // 3. TRUYỀN DỮ LIỆU: Phải bỏ biến 'products' vào đây
-            return View(products);
+            // CHUYỂN ĐỔI SANG VIEWMODEL (Xử lý hết logic tại đây)
+            var viewModel = products.Select(p => new ProductDisplayViewModel
+            {
+                ProductId = p.ProductId,
+                Title = p.Title,
+                Price = p.Price,
+                ImageUrl = p.ProductImages?.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png",
+                Location = p.Location ?? "Toàn quốc",
+
+                // Logic: Đã thả tim chưa? (Check theo UserId trong Session)
+                IsFavorite = !string.IsNullOrEmpty(userIdStr) &&
+                             p.Favorites.Any(f => f.UserId.ToString() == userIdStr),
+
+                // Logic: Tin mới (Đăng trong vòng 3 ngày gần đây)
+                IsNew = p.CreatedAt > DateTime.Now.AddDays(-3),
+
+                // Định dạng thời gian hiển thị
+                TimeAgo = p.CreatedAt?.ToString("dd/MM") ?? ""
+            }).ToList();
+
+            return View(viewModel);
         }
+
+        // ==========================================
+        // 2. TRANG CHI TIẾT (DETAILS)
+        // ==========================================
         public async Task<IActionResult> Details(int id)
         {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+
             var product = await _context.Products
                 .Include(p => p.ProductImages)
                 .Include(p => p.User)
                 .Include(p => p.Category)
-                .Include(p => p.Favorites) // Thêm để trang chi tiết cũng hiện nút tim chuẩn
+                .Include(p => p.Favorites)
                 .FirstOrDefaultAsync(p => p.ProductId == id);
 
-            if (product == null)
-            {
-                return NotFound();
-            }
+            if (product == null) return NotFound();
+
+            // Nếu ông muốn sạch tuyệt đối, hãy tạo thêm ProductDetailViewModel. 
+            // Ở đây tôi nạp thêm thông tin thả tim vào ViewBag để View chỉ việc hiện
+            ViewBag.IsFavorite = !string.IsNullOrEmpty(userIdStr) &&
+                                 product.Favorites.Any(f => f.UserId.ToString() == userIdStr);
 
             return View(product);
         }

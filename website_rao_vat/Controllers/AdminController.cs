@@ -13,33 +13,38 @@ public class AdminController : Controller
     }
 
     // 1. Trang Dashboard: Thống kê và liệt kê danh sách
-    public async Task<IActionResult> Index(string userSearch, string postSearch)
+    public async Task<IActionResult> Index(string userSearch, string postSearch, int page = 1)
     {
         if (HttpContext.Session.GetString("UserRole") != "Admin") return RedirectToAction("Login", "Account");
 
-        // 1. Khởi tạo query cho Users
-        var usersQuery = _context.Users.AsQueryable();
+        int pageSize = 10;
 
-        // 2. ÁP DỤNG ĐIỀU KIỆN TÌM KIẾM (Đây là chỗ quan trọng nhất)
-        if (!string.IsNullOrEmpty(userSearch))
-        {
-            // Tìm gần đúng: chỉ cần chứa ký tự đó là hiện ra
-            usersQuery = usersQuery.Where(u => u.Username.Contains(userSearch)
-                                            || u.FullName.Contains(userSearch));
-        }
-
-        // --- Logic cho bài đăng giữ nguyên ---
+        // Query bài đăng
         var postsQuery = _context.Products.Include(p => p.User).AsQueryable();
         if (!string.IsNullOrEmpty(postSearch))
-        {
             postsQuery = postsQuery.Where(p => p.Title.Contains(postSearch));
-        }
 
+        // Tính toán phân trang
+        int totalPosts = await postsQuery.CountAsync();
+        int totalPages = (int)Math.Ceiling((double)totalPosts / pageSize);
+        if (page < 1) page = 1;
+
+        // Gán dữ liệu
+        ViewBag.TotalPages = totalPages;
+        ViewBag.CurrentPage = page;
+        ViewBag.PostSearch = postSearch;
+        ViewBag.UserSearch = userSearch;
         ViewBag.TotalUsers = await _context.Users.CountAsync();
-        ViewBag.TotalPosts = await _context.Products.CountAsync();
-        ViewBag.AllPosts = await postsQuery.OrderByDescending(p => p.CreatedAt).ToListAsync();
+        ViewBag.TotalPosts = totalPosts;
+        ViewBag.AllPosts = await postsQuery.OrderByDescending(p => p.CreatedAt)
+                                           .Skip((page - 1) * pageSize)
+                                           .Take(pageSize).ToListAsync();
 
-        // Trả về danh sách đã được lọc
+        // Query người dùng (Hiện tại vẫn lấy hết)
+        var usersQuery = _context.Users.AsQueryable();
+        if (!string.IsNullOrEmpty(userSearch))
+            usersQuery = usersQuery.Where(u => u.FullName.Contains(userSearch) || u.Username.Contains(userSearch));
+
         return View(await usersQuery.ToListAsync());
     }
 

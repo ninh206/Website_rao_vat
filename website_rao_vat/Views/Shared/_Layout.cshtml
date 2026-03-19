@@ -4,8 +4,9 @@
 @{
     var userName = HttpContextAccessor.HttpContext.Session.GetString("UserName");
     var userRole = HttpContextAccessor.HttpContext.Session.GetString("UserRole");
+    var userId = HttpContextAccessor.HttpContext.Session.GetString("UserId");
 
-    // Kiểm tra trang chủ
+    // Kiểm tra xem có đang ở trang chủ không
     var isHomePage = ViewContext.RouteData.Values["controller"]?.ToString() == "Home" &&
                      ViewContext.RouteData.Values["action"]?.ToString() == "Index";
 }
@@ -16,122 +17,149 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Classifieds</title>
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
     <style>
-        /* Giữ nguyên phần CSS của bạn */
         :root {
-            --bg-dark: #0a0b0d;
-            --card-dark: #1a1c1e;
-            --border-color: rgba(255, 255, 255, 0.1);
             --primary-blue: #0d6efd;
+            --light-bg: #f8f9fa;
+            --navbar-height: 75px;
         }
 
         body {
-            background-color: var(--bg-dark);
-            color: #ffffff;
-            font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
-            overflow-x: hidden;
+            background-color: var(--light-bg);
+            color: #333;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            padding-top: var(--navbar-height);
         }
 
+        /* Navbar hiện đại */
         .navbar {
-            background-color: var(--bg-dark) !important;
-            border-bottom: 1px solid var(--border-color);
-            padding: 0.75rem 0;
-            z-index: 1030;
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 15px rgba(0,0,0,0.04);
+            height: var(--navbar-height);
         }
 
+        .navbar-brand {
+            font-size: 1.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        /* Header Search bar (chỉ hiện khi cuộn hoặc ở trang phụ) */
         .header-search-container {
-            position: relative;
-            margin-left: 2rem;
-            min-width: 350px;
+            background: #f1f3f5;
+            border-radius: 50px;
+            padding: 5px 15px;
+            width: 300px;
+            transition: all 0.3s;
         }
 
-            .header-search-container input {
-                background-color: #16181a !important;
-                border: 1px solid var(--border-color) !important;
-                border-radius: 8px;
-                color: white !important;
-                padding-left: 2.5rem;
-                height: 40px;
-                transition: 0.3s;
+            .header-search-container:focus-within {
+                background: #fff;
+                box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
             }
-        /* ... Các CSS còn lại giữ nguyên ... */
+
+        /* Hero Section Premium */
+        .hero-premium {
+            background: linear-gradient(180deg, #e3f2fd 0%, #f8f9fa 100%);
+            padding: 80px 0 120px 0;
+            border-radius: 0 0 50px 50px;
+        }
+
+        /* Dropdown Menu */
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-radius: 15px;
+            padding: 10px;
+        }
+
+        .btn-post-ad {
+            border-radius: 50px;
+            padding: 8px 25px;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+            .btn-post-ad:hover {
+                transform: scale(1.05);
+            }
     </style>
 </head>
-<body>
+<body data-user-id="@userId">
     <header>
-        <nav class="navbar navbar-expand-lg navbar-dark">
-            <div class="container-fluid px-lg-5">
-                <div class="d-flex align-items-center">
-                    <a class="navbar-brand fw-bold d-flex align-items-center" asp-controller="Home" asp-action="Index">
-                        <i class="bi bi-layers-fill me-2 text-primary"></i> Classifieds
-                    </a>
+        <nav class="navbar navbar-expand-lg fixed-top">
+            <div class="container px-lg-5">
+                <a class="navbar-brand fw-bold text-dark d-flex align-items-center" asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-box-seam-fill me-2 text-primary"></i> Classifieds
+                </a>
 
-                    @* BỌC 1: Ẩn thanh Search của khách đối với Admin *@
-                    @if (userRole != "Admin")
-                    {
-                        <form class="header-search-container d-none d-md-block" asp-controller="Home" asp-action="Search" method="get">
-                            <i class="bi bi-search"></i>
-                            <input type="text" name="query" class="form-control shadow-none" placeholder="Tìm kiếm bất cứ thứ gì...">
-                        </form>
-                    }
-                </div>
+                @if (userRole != "Admin" && !isHomePage)
+                {
+                    <form class="header-search-container d-none d-lg-flex align-items-center ms-4" asp-controller="Home" asp-action="Search" method="get">
+                        <i class="bi bi-search text-muted me-2"></i>
+                        <input type="text" name="query" class="form-control border-0 bg-transparent shadow-none p-0" placeholder="Tìm kiếm...">
+                    </form>
+                }
 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav ms-auto align-items-center">
-                        @* BỌC 2: Ẩn các danh mục bán hàng đối với Admin *@
-                        @if (userRole != "Admin")
+                        @if (userRole == "Admin")
                         {
-                            <li class="nav-item"><a class="nav-link" href="#">Nhà đất</a></li>
-                            <li class="nav-item"><a class="nav-link" href="#">Điện tử</a></li>
-                            <li class="nav-item"><a class="nav-link" href="#">Xe cộ</a></li>
+                            <li class="nav-item">
+                                <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 border border-danger border-opacity-10 rounded-pill">
+                                    <i class="bi bi-shield-check me-1"></i> ADMIN PANEL
+                                </span>
+                            </li>
                         }
                         else
                         {
-                            @* Hiện thông báo chế độ Admin cho xịn *@
-                            <li class="nav-item">
-                                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 border border-primary border-opacity-25 mr-2">
-                                    <i class="bi bi-shield-lock me-1"></i> CHẾ ĐỘ QUẢN TRỊ
-                                </span>
-                            </li>
+                            <li class="nav-item"><a class="nav-link text-dark fw-medium px-3" href="#">Khám phá</a></li>
+                            <li class="nav-item"><a class="nav-link text-dark fw-medium px-3" href="#">Trợ giúp</a></li>
                         }
 
                         @if (!string.IsNullOrEmpty(userName))
                         {
-                            <li class="nav-item dropdown ms-lg-4">
-                                <a class="nav-link dropdown-toggle text-white fw-bold d-flex align-items-center" href="#" id="userDrop" data-bs-toggle="dropdown">
-                                    <i class="bi bi-person-circle me-2 fs-5"></i> @userName
+                            <li class="nav-item dropdown ms-lg-3">
+                                <a class="nav-link dropdown-toggle text-dark fw-bold d-flex align-items-center" href="#" id="userDrop" data-bs-toggle="dropdown">
+                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                        @userName.Substring(0, 1).ToUpper()
+                                    </div>
+                                    @userName
                                 </a>
-                                <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow">
+                                <ul class="dropdown-menu dropdown-menu-end animate slideIn">
                                     @if (userRole == "Admin")
                                     {
-                                        <li><a class="dropdown-item text-primary fw-bold" asp-controller="Admin" asp-action="Index"><i class="bi bi-speedometer2 me-2"></i>Quản trị viên</a></li>
-                                        <li><hr class="dropdown-divider border-secondary"></li>
+                                        <li><a class="dropdown-item fw-bold text-primary" asp-controller="Admin" asp-action="Index"><i class="bi bi-speedometer2 me-2"></i>Bảng điều khiển</a></li>
+                                        <li><hr class="dropdown-divider"></li>
                                     }
-                                    <li><a class="dropdown-item" asp-controller="User" asp-action="Index"><i class="bi bi-person me-2"></i>Trang cá nhân</a></li>
+                                    <li><a class="dropdown-item" asp-controller="User" asp-action="Index"><i class="bi bi-person me-2"></i>Hồ sơ của tôi</a></li>
+                                    <li><a class="dropdown-item" href="#"><i class="bi bi-heart me-2"></i>Tin đã lưu</a></li>
+                                    <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item text-danger" asp-controller="Account" asp-action="Logout"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
                                 </ul>
                             </li>
                         }
                         else
                         {
-                            <li class="nav-item ms-lg-4">
-                                <a asp-controller="Account" asp-action="Login" class="btn btn-link text-white text-decoration-none">Đăng nhập</a>
+                            <li class="nav-item ms-lg-3">
+                                <a asp-controller="Account" asp-action="Login" class="btn btn-link text-dark text-decoration-none fw-bold">Đăng nhập</a>
                             </li>
                         }
 
-                        @* BỌC 3: Ẩn nút Đăng tin đối với Admin *@
                         @if (userRole != "Admin")
                         {
-                            <li class="nav-item ms-3">
-                                <a asp-controller="Ads" asp-action="Post" class="btn btn-primary btn-post-ad">
-                                    <i class="bi bi-plus-circle-fill me-2"></i> Đăng tin
+                            <li class="nav-item ms-lg-3">
+                                <a asp-controller="Ads" asp-action="Post" class="btn btn-primary btn-post-ad shadow-sm">
+                                    <i class="bi bi-plus-lg me-1"></i> Đăng tin
                                 </a>
                             </li>
                         }
@@ -141,38 +169,24 @@
         </nav>
     </header>
 
-    @* BỌC 4: Chỉ hiện Hero Section nếu KHÔNG phải Admin *@
     @if (isHomePage && userRole != "Admin")
     {
-        <section class="hero-section text-center">
-            @* ... Nội dung Hero giữ nguyên ... *@
+        <section class="hero-premium text-center">
             <div class="container">
-                <h1 class="display-4 fw-bold mb-3">Tìm mọi thứ bạn cần,<br>ngay trong khu phố của bạn.</h1>
-                <p class="text-secondary mb-5 fs-5">Cách đơn giản nhất để mua và bán tại địa phương.</p>
-                @* Form search to đùng ở giữa *@
-                <form class="search-filter-box mx-auto d-flex align-items-center" style="max-width: 950px;" asp-controller="Home" asp-action="Search" method="get">
-                    @* ... Nội dung form ... *@
-                    <button type="submit" class="btn btn-primary rounded-3 px-5 py-2 fw-bold ms-2">Tìm kiếm</button>
+                <h1 class="display-4 fw-bold text-dark mb-3">Mua bán an toàn, nhanh chóng</h1>
+                <p class="text-secondary mb-5 fs-5">Hàng ngàn món đồ cũ và mới đang chờ bạn khám phá.</p>
+
+                <form class="bg-white p-2 rounded-pill shadow-lg d-flex mx-auto" style="max-width: 700px;" asp-controller="Home" asp-action="Search" method="get">
+                    <input type="text" name="query" class="form-control border-0 shadow-none px-4" placeholder="Bạn đang tìm kiếm gì hôm nay?">
+                    <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold">TÌM KIẾM</button>
                 </form>
             </div>
         </section>
 
-        <div class="container mt-5">
-            <h4 class="mb-0 fw-bold mb-4">Danh mục phổ biến</h4>
-            <div class="row g-4">
-                @* ... Các thẻ Category Card ... *@
-                <div class="col-6 col-md-3">
-                    <a href="#" class="category-card"><i class="bi bi-house-door category-icon"></i><div>Nhà đất</div></a>
-                </div>
-                <div class="col-6 col-md-3">
-                    <a href="#" class="category-card"><i class="bi bi-laptop category-icon"></i><div>Điện tử</div></a>
-                </div>
-                <div class="col-6 col-md-3">
-                    <a href="#" class="category-card"><i class="bi bi-car-front category-icon"></i><div>Xe cộ</div></a>
-                </div>
-                <div class="col-6 col-md-3">
-                    <a href="#" class="category-card"><i class="bi bi-compass category-icon"></i><div>Đồ cổ</div></a>
-                </div>
+        <div class="container" style="margin-top: -50px;">
+            <div class="bg-white p-4 rounded-4 shadow-sm border border-light">
+                <h5 class="fw-bold mb-4">Danh mục phổ biến</h5>
+                @await Component.InvokeAsync("CategoryMenu")
             </div>
         </div>
     }
@@ -183,16 +197,40 @@
         </main>
     </div>
 
-    @* Footer giữ nguyên *@
-    <footer class="py-5 border-top border-secondary border-opacity-10">
-        <div class="container text-center">
-            <span class="text-muted small">&copy; 2026 - <strong>Classifieds</strong></span>
+    <footer class="bg-white py-5 border-top mt-5">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <h5 class="fw-bold text-primary mb-3"><i class="bi bi-box-seam-fill me-2"></i>Classifieds</h5>
+                    <p class="text-muted small">Nền tảng rao vặt hàng đầu Việt Nam. Kết nối người bán và người mua một cách an toàn và dễ dàng.</p>
+                </div>
+                <div class="col-md-2 ms-auto">
+                    <h6 class="fw-bold mb-3">Về chúng tôi</h6>
+                    <ul class="list-unstyled small">
+                        <li><a href="#" class="text-muted text-decoration-none">Giới thiệu</a></li>
+                        <li><a href="#" class="text-muted text-decoration-none">Quy chế hoạt động</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2">
+                    <h6 class="fw-bold mb-3">Hỗ trợ khách hàng</h6>
+                    <ul class="list-unstyled small">
+                        <li><a href="#" class="text-muted text-decoration-none">Trung tâm trợ giúp</a></li>
+                        <li><a href="#" class="text-muted text-decoration-none">An toàn mua bán</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-4 text-secondary opacity-10">
+            <div class="text-center text-muted small">
+                &copy; 2026 - <strong>Ninh Classifieds Project</strong>. All rights reserved.
+            </div>
         </div>
     </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script src="~/js/ads-management.js" asp-append-version="true"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

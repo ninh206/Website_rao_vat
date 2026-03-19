@@ -1,48 +1,44 @@
 ﻿@model website_rao_vat.Models.User
 @{
-    ViewData["Title"] = "Chỉnh sửa tài khoản";
+    ViewData["Title"] = "Sửa tài khoản";
 }
 
 <div class="row justify-content-center mt-5">
-    <div class="col-md-6">
-        <div class="category-card p-5 shadow-lg border border-secondary border-opacity-10">
-            <h4 class="fw-bold mb-4 text-white text-center">
-                <i class="bi bi-person-gear me-2 text-primary"></i>Sửa thông tin: @Model.FullName
+    <div class="col-md-6 col-lg-5">
+        <div class="category-card p-5 border-0 shadow">
+            <h4 class="fw-bold mb-4 text-dark text-center">
+                <i class="bi bi-person-circle text-primary me-2"></i>Hồ sơ người dùng
             </h4>
 
             <form asp-action="EditUser" method="post">
                 @Html.AntiForgeryToken()
-                @* Quan trọng: Phải có UserId ẩn để Controller biết đang sửa ai *@
                 <input type="hidden" name="UserId" value="@Model.UserId" />
 
                 <div class="mb-3">
-                    <label class="form-label small text-secondary fw-bold">TÊN ĐĂNG NHẬP</label>
-                    <input asp-for="Username" class="form-control bg-dark border-secondary text-white py-2" />
+                    <label class="form-label small fw-bold text-muted">TÊN ĐĂNG NHẬP</label>
+                    <input asp-for="Username" class="form-control py-2" />
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label small text-secondary fw-bold">HỌ VÀ TÊN</label>
-                    <input asp-for="FullName" class="form-control bg-dark border-secondary text-white py-2" />
+                    <label class="form-label small fw-bold text-muted">HỌ VÀ TÊN</label>
+                    <input asp-for="FullName" class="form-control py-2" />
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label small text-secondary fw-bold">EMAIL</label>
-                    <input asp-for="Email" class="form-control bg-dark border-secondary text-white py-2" />
+                <div class="mb-4">
+                    <label class="form-label small fw-bold text-muted">EMAIL</label>
+                    <input asp-for="Email" class="form-control py-2" />
                 </div>
 
-                <div class="mb-4 mt-4 p-3 border border-warning border-opacity-25 rounded-3 bg-warning bg-opacity-5">
-                    <label class="form-label small text-warning fw-bold">
-                        <i class="bi bi-shield-lock-fill me-1"></i> ĐẶT LẠI MẬT KHẨU MỚI
+                <div class="mb-4 p-3 bg-light rounded-3 border border-dashed border-primary border-opacity-25">
+                    <label class="form-label small text-primary fw-bold">
+                        <i class="bi bi-key-fill me-1"></i> CẤP MẬT KHẨU MỚI
                     </label>
-                    @* name="newPassword" phải khớp với tham số trong Controller *@
-                    <input type="text" name="newPassword" class="form-control bg-dark border-warning border-opacity-25 text-white"
-                           placeholder="Nhập mật khẩu mới nếu muốn đổi...">
-                    <div class="form-text text-muted small">Để trống nếu không muốn thay đổi mật khẩu.</div>
+                    <input type="text" name="newPassword" class="form-control" placeholder="Nhập pass mới nếu cần đổi...">
                 </div>
 
-                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                    <a href="/Admin/Index" class="btn btn-outline-light px-4">Quay lại</a>
-                    <button type="submit" class="btn btn-primary px-5 fw-bold">Lưu thay đổi</button>
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary py-2 fw-bold">CẬP NHẬT THÔNG TIN</button>
+                    <a href="/Admin/Index" class="btn btn-link text-secondary text-decoration-none">Quay lại trang quản lý</a>
                 </div>
             </form>
         </div>

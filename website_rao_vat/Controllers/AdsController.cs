@@ -4,175 +4,173 @@ using Microsoft.EntityFrameworkCore;
 using website_rao_vat.Data;
 using website_rao_vat.Models;
 
-public class AdsController : Controller
+namespace website_rao_vat.Controllers
 {
-    private readonly DataBaseWebRaoVatContext _context;
-    private readonly IWebHostEnvironment _hostEnvironment;
-
-    public AdsController(DataBaseWebRaoVatContext context, IWebHostEnvironment hostEnvironment)
+    public class AdsController : Controller
     {
-        _context = context;
-        _hostEnvironment = hostEnvironment;
-    }
+        private readonly DataBaseWebRaoVatContext _context;
+        private readonly IWebHostEnvironment _hostEnvironment;
 
-    // ================== PHẦN ĐĂNG TIN (POST) ==================
-    [HttpGet]
-    public IActionResult Post()
-    {
-        if (HttpContext.Session.GetString("UserId") == null) return RedirectToAction("Login", "Account");
-        ViewBag.Categories = new SelectList(_context.Categories, "CategoryId", "CategoryName");
-        return View();
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Post(AdPostViewModel model)
-    {
-        var userId = HttpContext.Session.GetString("UserId");
-        if (userId == null) return RedirectToAction("Login", "Account");
-
-        var product = new Product
+        public AdsController(DataBaseWebRaoVatContext context, IWebHostEnvironment hostEnvironment)
         {
-            Title = model.Title,
-            Price = model.Price,
-            Description = model.Description,
-            Location = model.Location,
-            CategoryId = model.CategoryId,
-            UserId = int.Parse(userId),
-            CreatedAt = DateTime.Now,
-            Status = "Active"
-        };
-
-        _context.Products.Add(product);
-        await _context.SaveChangesAsync();
-
-        if (model.Images != null && model.Images.Count > 0)
-        {
-            string uploadDir = Path.Combine(_hostEnvironment.WebRootPath, "uploads");
-            if (!Directory.Exists(uploadDir)) Directory.CreateDirectory(uploadDir);
-
-            foreach (var file in model.Images)
-            {
-                string fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
-                string filePath = Path.Combine(uploadDir, fileName);
-                using (var stream = new FileStream(filePath, FileMode.Create)) { await file.CopyToAsync(stream); }
-
-                _context.ProductImages.Add(new ProductImage
-                {
-                    ProductId = product.ProductId,
-                    ImageUrl = "/uploads/" + fileName,
-                    IsPrimary = (model.Images.IndexOf(file) == 0)
-                });
-            }
-            await _context.SaveChangesAsync();
+            _context = context;
+            _hostEnvironment = hostEnvironment;
         }
-        return RedirectToAction("Index", "User");
-    }
 
-    // ================== PHẦN SỬA TIN (EDIT) - FIX TẠI ĐÂY ==================
+        // ==========================================
+        // 1. CHỨC NĂNG ĐĂNG TIN (GET & POST)
+        // ==========================================
 
-    // 1. GET: Lấy dữ liệu cũ hiện lên Form
-    [HttpGet]
-    public async Task<IActionResult> Edit(int id)
-    {
-        var userId = HttpContext.Session.GetString("UserId");
-        if (string.IsNullOrEmpty(userId)) return RedirectToAction("Login", "Account");
-
-        var product = await _context.Products.FindAsync(id);
-
-        // Bảo mật: Chỉ chủ bài đăng mới được vào trang sửa
-        if (product == null || product.UserId.ToString() != userId) return Unauthorized();
-
-        ViewBag.Categories = new SelectList(_context.Categories, "CategoryId", "CategoryName", product.CategoryId);
-        return View(product);
-    }
-
-    // 2. POST: Lưu dữ liệu mới sau khi sửa
-    // 2. POST: Lưu dữ liệu mới sau khi sửa
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, Product model)
-    {
-        // 1. Kiểm tra ID khớp nhau
-        if (id != model.ProductId) return NotFound();
-
-        // 2. Lấy UserId từ Session để bảo mật
-        var userIdStr = HttpContext.Session.GetString("UserId");
-        if (string.IsNullOrEmpty(userIdStr)) return RedirectToAction("Login", "Account");
-
-        try
+        [HttpGet]
+        public async Task<IActionResult> Post()
         {
-            // 3. Tìm sản phẩm thực tế đang nằm trong Database
-            var productInDb = await _context.Products.FirstOrDefaultAsync(p => p.ProductId == id);
+            var userId = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userId)) return RedirectToAction("Login", "Account");
 
-            // 4. Kiểm tra quyền: Chỉ chủ bài đăng mới được sửa
-            if (productInDb == null || productInDb.UserId.ToString() != userIdStr)
+            var categories = await _context.Categories.ToListAsync();
+            var model = new AdPostViewModel
             {
-                return Unauthorized();
-            }
+                CategoryList = new SelectList(categories, "CategoryId", "CategoryName")
+            };
 
-            // 5. CHỈ CẬP NHẬT các trường lấy từ Form
-            productInDb.Title = model.Title;
-            productInDb.Price = model.Price;
-            productInDb.Location = model.Location;
-            productInDb.CategoryId = model.CategoryId;
-            productInDb.Description = model.Description;
-            productInDb.UpdatedAt = DateTime.Now; // Ghi nhận thời gian sửa
-
-            // 6. Lưu thay đổi
-            await _context.SaveChangesAsync();
-
-            TempData["Message"] = "Cập nhật tin đăng thành công!";
-            return RedirectToAction("Index", "User");
-        }
-        catch (Exception ex)
-        {
-            // Nếu có lỗi (ví dụ lỗi kết nối DB), nạp lại danh mục và hiện lại Form
-            ModelState.AddModelError("", "Không thể lưu thay đổi. Lỗi: " + ex.Message);
-            ViewBag.Categories = new SelectList(_context.Categories, "CategoryId", "CategoryName", model.CategoryId);
             return View(model);
         }
-    }
-    // ================== TÍNH NĂNG LƯU TIN (Dùng Favorite.cs) ==================
-    [HttpPost]
-    public async Task<IActionResult> ToggleFavorite(int productId)
-    {
-        var userIdStr = HttpContext.Session.GetString("UserId");
-        if (string.IsNullOrEmpty(userIdStr))
-            return Json(new { success = false, message = "Vui lòng đăng nhập!" });
 
-        int userId = int.Parse(userIdStr);
-
-        try
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Post(AdPostViewModel model)
         {
-            // 1. Dùng SingleOrDefaultAsync để đảm bảo lấy đúng và duy nhất
-            var existingFavorite = await _context.Favorites
-                .FirstOrDefaultAsync(f => f.UserId == userId && f.ProductId == productId);
+            var userId = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userId)) return RedirectToAction("Login", "Account");
 
-            if (existingFavorite != null)
+            if (ModelState.IsValid)
             {
-                _context.Favorites.Remove(existingFavorite);
-                await _context.SaveChangesAsync();
-                return Json(new { success = true, isFavorite = false });
-            }
-            else
-            {
-                var fav = new Favorite
+                var product = new Product
                 {
-                    UserId = userId,
-                    ProductId = productId,
-                    CreatedAt = DateTime.Now
+                    Title = model.Title,
+                    Price = model.Price,
+                    Description = model.Description,
+                    Location = model.Location,
+                    CategoryId = model.CategoryId, // Đảm bảo ViewModel để int, không phải int?
+                    UserId = int.Parse(userId),
+                    CreatedAt = DateTime.Now,
+                    Status = "Active"
                 };
-                _context.Favorites.Add(fav);
+
+                _context.Products.Add(product);
                 await _context.SaveChangesAsync();
-                return Json(new { success = true, isFavorite = true });
+
+                if (model.Images != null && model.Images.Any())
+                {
+                    await SaveProductImages(product.ProductId, model.Images);
+                }
+
+                return RedirectToAction("Index", "User");
             }
+
+            // Nếu lỗi, nạp lại danh mục cho Dropdown
+            var categories = await _context.Categories.ToListAsync();
+            model.CategoryList = new SelectList(categories, "CategoryId", "CategoryName");
+            return View(model);
         }
-        catch (DbUpdateException)
+
+        // ==========================================
+        // 2. CHỨC NĂNG SỬA TIN (GET & POST)
+        // ==========================================
+
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
         {
-            // 2. Nếu lỡ có 2 request chạy cùng lúc gây lỗi Unique Key, 
-            // ta coi như nó đã được lưu rồi và không báo lỗi đỏ cho User nữa.
-            return Json(new { success = true, isFavorite = true });
+            var userId = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userId)) return RedirectToAction("Login", "Account");
+
+            var product = await _context.Products.Include(p => p.Category).FirstOrDefaultAsync(p => p.ProductId == id);
+
+            if (product == null || product.UserId.ToString() != userId)
+                return Unauthorized();
+
+            var categories = await _context.Categories.ToListAsync();
+
+            var model = new AdPostViewModel
+            {
+                ProductId = product.ProductId,
+                Title = product.Title,
+                Price = product.Price,
+                Description = product.Description,
+                Location = product.Location,
+                // Sửa dòng 101 thành:
+                CategoryId = product.CategoryId ?? 0,
+                CategoryList = new SelectList(categories, "CategoryId", "CategoryName", product.CategoryId)
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, AdPostViewModel model)
+        {
+            var userId = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userId)) return RedirectToAction("Login", "Account");
+
+            var productInDb = await _context.Products.FirstOrDefaultAsync(p => p.ProductId == id);
+
+            if (productInDb == null || productInDb.UserId.ToString() != userId)
+                return Unauthorized();
+
+            if (ModelState.IsValid)
+            {
+                productInDb.Title = model.Title;
+                productInDb.Price = model.Price;
+                productInDb.Description = model.Description;
+                productInDb.Location = model.Location;
+                // FIX LỖI CS0266 TẠI ĐÂY:
+                productInDb.CategoryId = model.CategoryId;
+                productInDb.UpdatedAt = DateTime.Now;
+
+                if (model.Images != null && model.Images.Any())
+                {
+                    await SaveProductImages(productInDb.ProductId, model.Images);
+                }
+
+                await _context.SaveChangesAsync();
+                return RedirectToAction("Index", "User");
+            }
+
+            var categories = await _context.Categories.ToListAsync();
+            model.CategoryList = new SelectList(categories, "CategoryId", "CategoryName", model.CategoryId);
+            return View(model);
+        }
+
+        // ==========================================
+        // 3. HÀM PHỤ TRỢ LƯU ẢNH (DÙNG CHUNG)
+        // ==========================================
+
+        private async Task SaveProductImages(int productId, List<IFormFile> images)
+        {
+            string path = Path.Combine(_hostEnvironment.WebRootPath, "images");
+            if (!Directory.Exists(path)) Directory.CreateDirectory(path);
+
+            foreach (var file in images)
+            {
+                if (file.Length > 0)
+                {
+                    string fileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
+                    string filePath = Path.Combine(path, fileName);
+
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+
+                    _context.ProductImages.Add(new ProductImage
+                    {
+                        ProductId = productId,
+                        ImageUrl = "/images/" + fileName
+                    });
+                }
+            }
+            await _context.SaveChangesAsync();
         }
     }
 }
