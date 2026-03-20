@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = Model.Title;
+
 }
 
 <style>
@@ -61,9 +62,10 @@
                 <div class="d-flex gap-4 text-secondary mb-4">
                     <span><i class="bi bi-geo-alt me-1"></i> @Model.Location</span>
                     <span><i class="bi bi-clock me-1"></i> @Model.CreatedAt?.ToString("dd/MM/yyyy")</span>
+                    <span><i class="bi bi-eye me-1"></i> @(Model.ViewCount ?? 0) lượt xem</span>
                 </div>
 
-                <h5 class="fw-bold text-white mb-3">Mô tả chi tiết</h5>
+                <h5 class="fw-bold text-black mb-3">Mô tả chi tiết</h5>
                 <div class="text-secondary lh-lg" style="white-space: pre-line;">
                     @Model.Description
                 </div>
@@ -88,7 +90,7 @@
                     <a href="tel:@Model.User?.PhoneNumber" class="btn btn-primary btn-lg fw-bold py-3">
                         <i class="bi bi-telephone-fill me-2"></i> @Model.User?.PhoneNumber
                     </a>
-                    <button class="btn btn-outline-light btn-lg py-3">
+                    <button class="btn btn-outline-dark btn-lg py-3">
                         <i class="bi bi-chat-dots me-2"></i> Nhắn tin người bán
                     </button>
                     <button class="btn btn-link text-secondary text-decoration-none mt-2">

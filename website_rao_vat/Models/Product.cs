@@ -48,4 +48,5 @@ public partial class Product
     [ForeignKey("UserId")]
     [InverseProperty("Products")]
     public virtual User? User { get; set; }
+    public int? ViewCount { get; set; }
 }

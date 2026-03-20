@@ -1,0 +1,90 @@
+﻿@model website_rao_vat.Models.UserProfileViewModel
+@{
+    ViewData["Title"] = "Phân tích bài viết";
+}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-3">
+            <div class="category-card p-4 text-center mb-4 border rounded shadow-sm">
+                <i class="bi bi-person-circle text-primary" style="font-size: 4rem;"></i>
+                <h5 class="fw-bold mt-3">@(Model.User?.FullName ?? "Chưa có tên")</h5>
+                <p class="text-secondary small">@(Model.User?.Email ?? "Chưa có email")</p>
+                <hr class="opacity-25">
+                <div class="nav flex-column nav-pills">
+                    <a href="/User/Index" class="nav-link text-start text-dark"><i class="bi bi-collection me-2"></i> Tin đăng của tôi</a>
+                    <a href="/Product/ThongKe" class="nav-link active text-start"><i class="bi bi-graph-up-arrow me-2"></i> Thống kê hiệu quả</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-9">
+            <div class="category-card p-4 border rounded shadow-sm bg-white">
+                <h4 class="fw-bold mb-4">Phân tích bài viết đã chọn</h4>
+
+                <form asp-action="ThongKe" method="get" class="mb-5">
+                    <label class="form-label small fw-bold text-secondary">CHỌN BÀI VIẾT CẦN THEO DÕI</label>
+                    <select name="productId" class="form-select form-select-lg border-primary" onchange="this.form.submit()">
+                        @foreach (var p in (List<website_rao_vat.Models.Product>)ViewBag.Products)
+                        {
+                            <!option value="@p.ProductId" @(p.ProductId == ViewBag.SelectedProductId ? "selected" : "")>
+                                @p.Title
+                            </!option>
+                        }
+                    </select>
+                </form>
+
+                <div class="row g-4 mb-5 text-center">
+                    <div class="col-md-6">
+                        <div class="p-4 border rounded-3 bg-light">
+                            <div class="text-secondary small fw-bold mb-1">TỔNG LƯỢT XEM (ALL TIME)</div>
+                            <h2 class="fw-bold text-primary mb-0">@ViewBag.TotalViews</h2>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-4 border rounded-3 bg-light">
+                            <div class="text-secondary small fw-bold mb-1">TỔNG LƯỢT THẢ TYM</div>
+                            <h2 class="fw-bold text-danger mb-0">@ViewBag.TotalLikes</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <h6 class="fw-bold mb-3"><i class="bi bi-activity me-2 text-primary"></i>Lượt xem 7 ngày gần nhất</h6>
+                <div style="height: 350px;">
+                    <canvas id="viewChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const ctx = document.getElementById('viewChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: @Html.Raw(Json.Serialize(ViewBag.ChartLabels)),
+            datasets: [{
+                label: 'Lượt xem hằng ngày',
+                data: @Html.Raw(Json.Serialize(ViewBag.ChartData)),
+                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(13, 110, 253, 0.05)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4, // Độ cong của đường biểu đồ
+                pointRadius: 5,
+                pointBackgroundColor: '#0d6efd'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+</script>

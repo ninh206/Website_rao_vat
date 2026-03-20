@@ -9,8 +9,8 @@
         <div class="col-lg-3">
             <div class="category-card p-4 text-center mb-4">
                 <i class="bi bi-person-circle text-primary" style="font-size: 4rem;"></i>
-                <h5 class="fw-bold mt-3">@Model.User.FullName</h5>
-                <p class="text-secondary small">@Model.User.Email</p>
+                <h5 class="fw-bold mt-3">@(Model.User?.FullName ?? "Chưa có tên")</h5>
+                <p class="text-secondary small">@(Model.User?.Email ?? "Chưa có email")</p>
                 <hr class="border-secondary opacity-25">
 
                 <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist">
@@ -23,6 +23,9 @@
                     <button class="nav-link text-start" data-bs-toggle="pill" data-bs-target="#tab-profile">
                         <i class="bi bi-gear me-2"></i> Hồ sơ & Mật khẩu
                     </button>
+                    <a asp-controller="Product" asp-action="ThongKe" class="nav-link text-start text-dark">
+                        <i class="bi bi-graph-up-arrow me-2 text-primary"></i> Thống kê hiệu quả
+                    </a>
                 </div>
             </div>
         </div>
@@ -44,7 +47,7 @@
             <div class="tab-content" id="v-pills-tabContent">
 
                 <div class="tab-pane fade show active" id="tab-posts">
-                    <h4 class="fw-bold mb-4 text-white">Quản lý tin đăng (@Model.MyProducts.Count)</h4>
+                    <h4 class="fw-bold mb-4 text-black">Quản lý tin đăng (@Model.MyProducts.Count)</h4>
                     @if (Model.MyProducts.Any())
                     {
                         @foreach (var item in Model.MyProducts)
@@ -62,13 +65,13 @@
                                         }
                                     </div>
                                     <div>
-                                        <h6 class="fw-bold mb-1 text-white">@item.Title</h6>
+                                        <h6 class="fw-bold mb-1 text-black">@item.Title</h6>
                                         <span class="text-primary fw-bold">@item.Price.ToString("N0") đ</span>
                                         <small class="text-muted ms-3">@item.CreatedAt?.ToString("dd/MM/yyyy")</small>
                                     </div>
                                 </div>
                                 <div class="btn-group gap-2">
-                                    <a href="/Ads/Edit/@item.ProductId" class="btn btn-outline-light btn-sm px-3 rounded-pill">Sửa</a>
+                                    <a href="/Ads/Edit/@item.ProductId" class="btn btn-outline-dark btn-sm px-3 rounded-pill">Sửa</a>
                                     <form asp-action="DeletePost" asp-route-id="@item.ProductId" method="post" onsubmit="return confirm('Xóa tin này vĩnh viễn?')">
                                         <button type="submit" class="btn btn-outline-danger btn-sm px-3 rounded-pill">Xóa</button>
                                     </form>
@@ -86,7 +89,7 @@
                 </div>
 
                 <div class="tab-pane fade" id="tab-favorites">
-                    <h4 class="fw-bold mb-4 text-white">Tin đăng đã thích (@Model.SavedAds.Count)</h4>
+                    <h4 class="fw-bold mb-4 text-black">Tin đăng đã thích (@Model.SavedAds.Count)</h4>
                     @if (Model.SavedAds.Any())
                     {
                         @foreach (var fav in Model.SavedAds)
@@ -96,7 +99,7 @@
                                     <img src="@(fav.ProductImages?.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png")"
                                          style="width: 80px; height: 60px; object-fit: cover;" class="rounded me-3">
                                     <div>
-                                        <h6 class="fw-bold mb-1"><a href="/Home/Details/@fav.ProductId" class="text-white text-decoration-none">@fav.Title</a></h6>
+                                        <h6 class="fw-bold mb-1"><a href="/Home/Details/@fav.ProductId" class="text-bg-black text-decoration-none">@fav.Title</a></h6>
                                         <p class="text-primary fw-bold mb-0">@fav.Price.ToString("N0") đ</p>
                                     </div>
                                 </div>
@@ -120,7 +123,7 @@
 
                 <div class="tab-pane fade" id="tab-profile">
                     <div class="category-card p-4">
-                        <h4 class="fw-bold mb-4 text-white">Cấu hình bảo mật</h4>
+                        <h4 class="fw-bold mb-4 text-black">Cấu hình bảo mật</h4>
                         <form asp-action="ChangePassword" method="post" style="max-width: 450px;">
                             <div class="mb-3">
                                 <label class="form-label small text-secondary fw-bold">MẬT KHẨU HIỆN TẠI</label>
@@ -135,7 +138,7 @@
                         </form>
                     </div>
                 </div>
-
+                
             </div>
         </div>
     </div>
