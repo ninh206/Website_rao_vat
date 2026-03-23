@@ -16,6 +16,7 @@ public partial class DataBaseWebRaoVatContext : DbContext
     {
     }
     public DbSet<ProductView> ProductViews { get; set; }
+    public DbSet<Message> Messages { get; set; }
     public virtual DbSet<Category> Categories { get; set; }
 
     public virtual DbSet<Favorite> Favorites { get; set; }

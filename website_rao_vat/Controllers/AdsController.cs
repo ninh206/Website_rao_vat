@@ -172,5 +172,64 @@ namespace website_rao_vat.Controllers
             }
             await _context.SaveChangesAsync();
         }
+        [HttpPost]
+        public async Task<IActionResult> ToggleFavorite(int productId)
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+
+            if (string.IsNullOrWhiteSpace(userIdStr) || !int.TryParse(userIdStr, out int userId))
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Vui lòng đăng nhập!"
+                });
+            }
+
+            try
+            {
+                var favorite = await _context.Favorites
+                    .FirstOrDefaultAsync(f => f.UserId == userId && f.ProductId == productId);
+
+                // Nếu đã tồn tại → xóa
+                if (favorite != null)
+                {
+                    _context.Favorites.Remove(favorite);
+                    await _context.SaveChangesAsync();
+
+                    return Json(new
+                    {
+                        success = true,
+                        isFavorite = false
+                    });
+                }
+
+                // Nếu chưa có → thêm mới
+                var newFavorite = new Favorite
+                {
+                    UserId = userId,
+                    ProductId = productId,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.Favorites.Add(newFavorite);
+                await _context.SaveChangesAsync();
+
+                return Json(new
+                {
+                    success = true,
+                    isFavorite = true
+                });
+            }
+            catch (DbUpdateException)
+            {
+                // Trường hợp bị race condition (double click / 2 request cùng lúc)
+                return Json(new
+                {
+                    success = true,
+                    isFavorite = true
+                });
+            }
+        }
     }
 }

@@ -1,22 +1,50 @@
 ﻿@model website_rao_vat.Models.Product
+@using Microsoft.AspNetCore.Http
 
 @{
     ViewData["Title"] = Model.Title;
-
+    var myId = Context.Session.GetString("UserId");
+    var isLogin = !string.IsNullOrEmpty(myId);
 }
 
 <style>
+    /* Style cho khung chat - Tối ưu hiển thị */
+    #chatBox {
+        display: none;
+        position: fixed;
+        bottom: 25px; /* Đẩy lên 1 chút cho thoáng */
+        right: 25px;
+        width: 350px;
+        z-index: 2000;
+        border-radius: 15px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        border: none;
+        overflow: hidden; /* Cắt các góc bo cho đẹp */
+    }
+
+    #messagesList {
+        height: 380px; /* Tăng thêm 1 chút để đọc được nhiều hơn */
+        overflow-y: auto;
+        overflow-x: hidden;
+        background: #f8f9fa;
+        display: flex;
+        flex-direction: column;
+        padding: 15px;
+        gap: 10px; /* Tạo khoảng cách giữa các bong bóng chat */
+    }
+
+    /* Style product-img-main và seller-card của ông giữ nguyên ở đây */
     .product-img-main {
         width: 100%;
         height: 500px;
         object-fit: cover;
         border-radius: 16px;
-        border: 1px solid var(--border-color);
+        border: 1px solid #ddd;
     }
 
     .seller-card {
-        background: var(--card-dark);
-        border: 1px solid var(--border-color);
+        background: #fff;
+        border: 1px solid #ddd;
         border-radius: 16px;
         padding: 20px;
         position: sticky;
@@ -25,84 +53,88 @@
 
     .price-tag {
         font-size: 2rem;
-        color: var(--primary-blue);
+        color: #007bff;
         font-weight: 800;
     }
 </style>
 
 <div class="container mt-4">
-    <nav aria-label="breadcrumb" class="mb-4">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/" class="text-secondary text-decoration-none">Trang chủ</a></li>
-            <li class="breadcrumb-item"><a href="#" class="text-secondary text-decoration-none">@Model.Category?.CategoryName</a></li>
-            <li class="breadcrumb-item active text-white" aria-current="page">Chi tiết</li>
-        </ol>
-    </nav>
-
     <div class="row g-5">
+        @* Cột trái: Thông tin sản phẩm *@
         <div class="col-lg-8">
-            <div class="mb-4">
-                <img src="@(Model.ProductImages?.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png")"
-                     class="product-img-main shadow" id="mainImg">
-            </div>
-
-            <div class="d-flex gap-2 mb-4 overflow-auto pb-2">
-                @foreach (var img in Model.ProductImages)
-                {
-                    <img src="@img.ImageUrl" class="rounded border"
-                         style="width: 80px; height: 80px; cursor: pointer; object-fit: cover;"
-                         onclick="document.getElementById('mainImg').src='@img.ImageUrl'">
-                }
-            </div>
-
-            <hr class="border-secondary opacity-25">
-
+            <img src="@(Model.ProductImages?.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png")" class="product-img-main shadow" id="mainImg">
             <div class="mt-4">
-                <h2 class="fw-bold mb-3">@Model.Title</h2>
-                <div class="d-flex gap-4 text-secondary mb-4">
-                    <span><i class="bi bi-geo-alt me-1"></i> @Model.Location</span>
-                    <span><i class="bi bi-clock me-1"></i> @Model.CreatedAt?.ToString("dd/MM/yyyy")</span>
-                    <span><i class="bi bi-eye me-1"></i> @(Model.ViewCount ?? 0) lượt xem</span>
-                </div>
-
-                <h5 class="fw-bold text-black mb-3">Mô tả chi tiết</h5>
-                <div class="text-secondary lh-lg" style="white-space: pre-line;">
-                    @Model.Description
-                </div>
+                <h2 class="fw-bold">@Model.Title</h2>
+                <div class="text-secondary lh-lg" style="white-space: pre-line;">@Model.Description</div>
             </div>
         </div>
 
+        @* Cột phải: Thông tin người bán *@
         <div class="col-lg-4">
             <div class="seller-card shadow-sm">
                 <div class="price-tag mb-4">@string.Format("{0:N0}", Model.Price) đ</div>
-
-                <div class="d-flex align-items-center mb-4 p-3 border border-secondary border-opacity-25 rounded-3">
-                    <div class="flex-shrink-0">
-                        <i class="bi bi-person-circle fs-1 text-secondary"></i>
-                    </div>
-                    <div class="flex-grow-1 ms-3">
+                <div class="d-flex align-items-center mb-4 p-3 border rounded-3 bg-light bg-opacity-50">
+                    <i class="bi bi-person-circle fs-1 text-secondary me-3"></i>
+                    <div>
                         <h6 class="mb-0 fw-bold">@Model.User?.FullName</h6>
                         <small class="text-success"><i class="bi bi-patch-check-fill"></i> Đã xác minh</small>
                     </div>
                 </div>
 
                 <div class="d-grid gap-2">
-                    <a href="tel:@Model.User?.PhoneNumber" class="btn btn-primary btn-lg fw-bold py-3">
-                        <i class="bi bi-telephone-fill me-2"></i> @Model.User?.PhoneNumber
+                    <a href="tel:@Model.User?.PhoneNumber" class="btn btn-primary btn-lg fw-bold py-3 shadow-sm">
+                        <i class="bi bi-telephone-fill me-2"></i> Gọi điện ngay
                     </a>
-                    <button class="btn btn-outline-dark btn-lg py-3">
-                        <i class="bi bi-chat-dots me-2"></i> Nhắn tin người bán
-                    </button>
-                    <button class="btn btn-link text-secondary text-decoration-none mt-2">
-                        <i class="bi bi-heart me-1"></i> Lưu tin đăng này
-                    </button>
-                </div>
 
-                <div class="mt-4 p-3 bg-dark rounded-3 small text-secondary">
-                    <i class="bi bi-shield-lock-fill text-warning me-2"></i>
-                    Đừng bao giờ chuyển khoản trước. Hãy kiểm tra hàng kỹ lưỡng trước khi mua.
+                    @if (isLogin)
+                    {
+                        if (Model.UserId.ToString() != myId)
+                        {
+                            <button type="button" class="btn btn-outline-primary btn-lg fw-bold py-3" onclick="openChat()">
+                                <i class="bi bi-chat-dots-fill me-2"></i> Chat với người bán
+                            </button>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary py-2">Đây là tin đăng của bạn</span>
+                        }
+                    }
+                    else
+                    {
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-outline-primary btn-lg fw-bold py-3">
+                            <i class="bi bi-box-arrow-in-right me-2"></i> Đăng nhập để chat
+                        </a>
+                    }
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+@* Đưa toàn bộ phần Chat ra ngoài để không bị ảnh hưởng bởi layout *@
+@if (isLogin)
+{
+    <input type="hidden" id="currentUserId" value="@myId" />
+    <div id="chatBox" class="card shadow-lg border-0">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
+            <h6 class="mb-0 fw-bold"><i class="bi bi-chat-left-dots-fill me-2"></i>@Model.User?.FullName</h6>
+            <button type="button" class="btn-close btn-close-white" onclick="closeChat()"></button>
+        </div>
+        <div id="messagesList" class="card-body">
+            @* Lịch sử chat sẽ nạp vào đây *@
+        </div>
+        <div class="card-footer bg-white p-3 border-top">
+            <div class="input-group">
+                <input type="text" id="messageInput" class="form-control border-0 bg-light rounded-start-pill px-3 shadow-none" placeholder="Nhập tin nhắn...">
+                <button class="btn btn-primary rounded-end-pill px-3 shadow-sm" id="sendButton" data-receiver="@Model.UserId">
+                    <i class="bi bi-send-fill"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+    <script src="~/js/chat-details.js"></script>
+}

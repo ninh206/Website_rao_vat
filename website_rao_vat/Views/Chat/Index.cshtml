@@ -1,0 +1,133 @@
+﻿@model website_rao_vat.Models.ChatViewModel
+
+@{
+    ViewData["Title"] = "Tin nhắn của tôi";
+    var myId = Context.Session.GetString("UserId");
+}
+
+<style>
+    .chat-container {
+        height: 75vh;
+        background: #fff;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        border-radius: 15px;
+        overflow: hidden;
+    }
+
+    .contact-list {
+        height: 100%;
+        border-right: 1px solid #eee;
+        overflow-y: auto;
+    }
+
+    .chat-item {
+        cursor: pointer;
+        transition: 0.2s;
+        border-bottom: 1px solid #f8f9fa;
+    }
+
+        .chat-item:hover {
+            background: #f8f9fa;
+        }
+
+        .chat-item.active {
+            background: #e7f3ff;
+            border-left: 4px solid #007bff;
+        }
+
+    #messagesList {
+        height: 60vh;
+        overflow-y: auto;
+        padding: 20px;
+        background: #fdfdfd;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .msg {
+        max-width: 70%;
+        padding: 10px 15px;
+        border-radius: 20px;
+        font-size: 0.95rem;
+        position: relative;
+    }
+
+    .msg-me {
+        align-self: flex-end;
+        background: #007bff;
+        color: #fff;
+        border-bottom-right-radius: 2px;
+    }
+
+    .msg-them {
+        align-self: flex-start;
+        background: #e9ecef;
+        color: #333;
+        border-bottom-left-radius: 2px;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="row chat-container">
+        <div class="col-md-4 contact-list p-0">
+            <div class="p-3 bg-light fw-bold border-bottom">Hộp thư đến</div>
+            @foreach (var convo in Model.Conversations)
+            {
+                <div class="chat-item p-3 @(Model.SelectedUser?.UserId == convo.OtherUser.UserId ? "active" : "")"
+                     onclick="location.href='@Url.Action("Index", new { withUserId = convo.OtherUser.UserId })'">
+                    <div class="d-flex justify-content-between">
+                        <span class="fw-bold">@convo.OtherUser.FullName</span>
+                        <small class="text-muted">@convo.LastTime.ToString("HH:mm")</small>
+                    </div>
+                    <div class="text-truncate small text-muted">@convo.LastMessage</div>
+                </div>
+            }
+        </div>
+
+        <div class="col-md-8 d-flex flex-column p-0">
+            <div class="p-3 border-bottom bg-light fw-bold">
+                @if (Model.SelectedUser != null)
+                {
+                    <span>Chat với @Model.SelectedUser.FullName</span>
+                }
+                else
+                {
+                    <span class="text-muted">Chọn một người để xem tin nhắn</span>
+                }
+            </div>
+
+            <div id="messagesList">
+                @if (Model.Messages != null)
+                {
+                    @foreach (var msg in Model.Messages)
+                    {
+                        var isMe = msg.SenderId.ToString() == myId;
+                        <div class="msg @(isMe ? "msg-me" : "msg-them")">
+                            @msg.Content
+                            <div style="font-size: 0.6rem; opacity: 0.7; text-align: @(isMe ? "right" : "left")">@msg.SentAt.ToString("HH:mm")</div>
+                        </div>
+                    }
+                }
+            </div>
+
+            @if (Model.SelectedUser != null)
+            {
+                <div class="p-3 border-top bg-white">
+                    <div class="input-group">
+                        <input type="text" id="messageInput" class="form-control rounded-pill-start border-0 bg-light px-4" placeholder="Nhập tin nhắn...">
+                        <button class="btn btn-primary rounded-pill-end px-4" id="sendButton" data-receiver="@Model.SelectedUser.UserId">Gửi</button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<input type="hidden" id="currentUserId" value="@myId" />
+
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+    <script src="~/js/chat-inbox.js" asp-append-version="true"></script>
+}

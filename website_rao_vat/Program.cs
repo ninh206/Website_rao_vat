@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using website_rao_vat.Data;
+using website_rao_vat.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // --- 1. CẤU HÌNH SERVICES ---
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddSignalR();
 
 // Cấu hình Database
 builder.Services.AddDbContext<DataBaseWebRaoVatContext>(options =>
@@ -54,6 +56,7 @@ app.UseAuthentication();
 // 3. Chạy Phân quyền (Phải đứng sau Authentication)
 app.UseAuthorization();
 
+app.MapHub<ChatHub>("/chatHub"); // ChatHub là file mình sẽ tạo ở bước sau
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

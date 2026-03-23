@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using website_rao_vat.Data;
@@ -17,48 +18,79 @@ namespace website_rao_vat.Controllers
             _context = context;
         }
 
-        // ==========================================
-        // 1. TRANG CHỦ (INDEX)
-        // ==========================================
-        public async Task<IActionResult> Index()
+        // --- HÀM HỖ TRỢ LẤY USER ID ---
+        private string GetCurrentUserId()
         {
-            // Bảo mật: Nếu là Admin thì đẩy vào trang quản trị luôn
-            if (HttpContext.Session.GetString("UserRole") == "Admin")
+            return User.FindFirstValue(ClaimTypes.NameIdentifier)
+                   ?? HttpContext.Session.GetString("UserId");
+        }
+
+        // ==========================================
+        // 1. TRANG CHỦ (INDEX) - FIX LỌC GIÁ & TIM
+        // ==========================================
+        public async Task<IActionResult> Index(string sortBy, string location, string query, int page = 1)
+        {
+            int pageSize = 5;
+            string userIdStr = GetCurrentUserId();
+            var favoriteProductIds = new List<int>();
+
+            // Lấy danh sách ID đã thích để đổ màu tim
+            if (!string.IsNullOrEmpty(userIdStr) && int.TryParse(userIdStr, out int userId))
             {
-                return RedirectToAction("Index", "Admin");
+                favoriteProductIds = await _context.Favorites
+                    .Where(f => f.UserId == userId)
+                    .Select(f => f.ProductId ?? 0)
+                    .ToListAsync();
             }
 
-            var userIdStr = HttpContext.Session.GetString("UserId");
-
-            // Lấy 12 sản phẩm mới nhất
-            var products = await _context.Products
+            // Bắt đầu Query
+            var productsQuery = _context.Products
+                .Include(p => p.User)
                 .Include(p => p.ProductImages)
-                .Include(p => p.Favorites)
-                .OrderByDescending(p => p.CreatedAt)
-                .Take(12)
-                .ToListAsync();
+                .AsQueryable();
 
-            // CHUYỂN ĐỔI SANG VIEWMODEL (Xử lý hết logic tại đây)
-            var viewModel = products.Select(p => new ProductDisplayViewModel
+            // A. LOGIC LỌC (FILTER)
+            if (!string.IsNullOrEmpty(query))
+                productsQuery = productsQuery.Where(p => p.Title.Contains(query));
+
+            if (!string.IsNullOrEmpty(location))
+                productsQuery = productsQuery.Where(p => p.Location == location);
+
+            // B. LOGIC SẮP XẾP (SORTING) - FIX LỖI Ở ĐÂY
+            productsQuery = sortBy switch
             {
-                ProductId = p.ProductId,
-                Title = p.Title,
-                Price = p.Price,
-                ImageUrl = p.ProductImages?.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png",
-                Location = p.Location ?? "Toàn quốc",
+                "price_asc" => productsQuery.OrderBy(p => p.Price),
+                "price_desc" => productsQuery.OrderByDescending(p => p.Price),
+                "oldest" => productsQuery.OrderBy(p => p.CreatedAt),
+                _ => productsQuery.OrderByDescending(p => p.CreatedAt) // Mặc định: Mới nhất
+            };
 
-                // Logic: Đã thả tim chưa? (Check theo UserId trong Session)
-                IsFavorite = !string.IsNullOrEmpty(userIdStr) &&
-                             p.Favorites.Any(f => f.UserId.ToString() == userIdStr),
+            // C. TÍNH TOÁN PHÂN TRANG
+            int totalItems = await productsQuery.CountAsync();
+            int totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+            if (page < 1) page = 1;
 
-                // Logic: Tin mới (Đăng trong vòng 3 ngày gần đây)
-                IsNew = p.CreatedAt > DateTime.Now.AddDays(-3),
+            var pagedData = await productsQuery
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(p => new ProductDisplayViewModel
+                {
+                    ProductId = p.ProductId,
+                    Title = p.Title,
+                    Price = p.Price,
+                    Location = p.Location,
+                    ImageUrl = p.ProductImages.FirstOrDefault().ImageUrl ?? "/images/no-image.png",
+                    Description = p.Description,
+                    TimeAgo = p.CreatedAt.HasValue ? p.CreatedAt.Value.ToString("dd/MM") : "",
+                    IsFavorite = favoriteProductIds.Contains(p.ProductId)
+                }).ToListAsync();
 
-                // Định dạng thời gian hiển thị
-                TimeAgo = p.CreatedAt?.ToString("dd/MM") ?? ""
-            }).ToList();
-
-            return View(viewModel);
+            return View(new ProductListViewModel
+            {
+                Products = pagedData,
+                CurrentPage = page,
+                TotalPages = totalPages
+            });
         }
 
         // ==========================================
@@ -66,7 +98,6 @@ namespace website_rao_vat.Controllers
         // ==========================================
         public async Task<IActionResult> Details(int id)
         {
-            // 1. Lấy thông tin sản phẩm (Nạp đủ các bảng liên quan)
             var product = await _context.Products
                 .Include(p => p.ProductImages).Include(p => p.User)
                 .Include(p => p.Category).Include(p => p.Favorites)
@@ -74,67 +105,53 @@ namespace website_rao_vat.Controllers
 
             if (product == null) return NotFound();
 
-            // 2. Lấy UserId từ Session (Do AccountController của ông dùng Session)
-            var currentUserId = HttpContext.Session.GetString("UserId");
+            string userIdStr = GetCurrentUserId();
             string cookieName = $"v_prod_{id}";
 
-            // --- LOGIC GHI NHẬN LƯỢT XEM (PHẢI NẰM Ở ĐÂY) ---
-            // Điều kiện: Nếu (Khách vãng lai HOẶC người xem khác chủ tin) VÀ chưa có Cookie trong 30p
-            bool isOwner = !string.IsNullOrEmpty(currentUserId) && currentUserId == product.UserId.ToString();
-
+            // Logic tăng view
+            bool isOwner = !string.IsNullOrEmpty(userIdStr) && userIdStr == product.UserId.ToString();
             if (!isOwner && Request.Cookies[cookieName] == null)
             {
-                // Ghi vào bảng ProductViews
                 _context.ProductViews.Add(new ProductView
                 {
                     ProductId = id,
-                    ViewerId = currentUserId, // Có thể null nếu chưa đăng nhập
+                    ViewerId = userIdStr,
                     IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
                     ViewedAt = DateTime.Now
                 });
-
-                // Tăng ViewCount trong bảng Products
                 product.ViewCount = (product.ViewCount ?? 0) + 1;
-
                 await _context.SaveChangesAsync();
-
-                // Cắm Cookie để không bị đếm trùng khi F5
                 Response.Cookies.Append(cookieName, "true", new CookieOptions { Expires = DateTimeOffset.Now.AddMinutes(30) });
             }
 
-            ViewBag.IsFavorite = !string.IsNullOrEmpty(currentUserId) && product.Favorites.Any(f => f.UserId.ToString() == currentUserId);
+            ViewBag.IsFavorite = !string.IsNullOrEmpty(userIdStr) && product.Favorites.Any(f => f.UserId.ToString() == userIdStr);
             return View(product);
         }
 
-        public IActionResult Privacy() => View();
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
         // ==========================================
-        // 3. HÀM TÌM KIẾM (SEARCH)
+        // 3. TÌM KIẾM (SEARCH)
         // ==========================================
         public async Task<IActionResult> Search(string query)
         {
-            // Nếu không nhập gì thì quay về trang chủ
-            if (string.IsNullOrEmpty(query))
+            if (string.IsNullOrEmpty(query)) return RedirectToAction("Index");
+
+            string userIdStr = GetCurrentUserId();
+            var favoriteProductIds = new List<int>();
+
+            if (!string.IsNullOrEmpty(userIdStr) && int.TryParse(userIdStr, out int userId))
             {
-                return RedirectToAction("Index");
+                favoriteProductIds = await _context.Favorites
+                    .Where(f => f.UserId == userId)
+                    .Select(f => f.ProductId ?? 0)
+                    .ToListAsync();
             }
 
-            var userIdStr = HttpContext.Session.GetString("UserId");
-
-            // Lọc sản phẩm theo tiêu đề (Tương đương LIKE %query% trong SQL)
             var products = await _context.Products
                 .Include(p => p.ProductImages)
-                .Include(p => p.Favorites)
-                .Where(p => p.Title.Contains(query)) // Logic tìm kiếm chính ở đây nè Ninh
+                .Where(p => p.Title.Contains(query))
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
 
-            // Chuyển sang ViewModel để hiển thị ra View
             var viewModel = products.Select(p => new ProductDisplayViewModel
             {
                 ProductId = p.ProductId,
@@ -142,12 +159,11 @@ namespace website_rao_vat.Controllers
                 Price = p.Price,
                 ImageUrl = p.ProductImages?.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png",
                 Location = p.Location ?? "Toàn quốc",
-                IsFavorite = !string.IsNullOrEmpty(userIdStr) && p.Favorites.Any(f => f.UserId.ToString() == userIdStr),
-                IsNew = p.CreatedAt > DateTime.Now.AddDays(-3),
+                IsFavorite = favoriteProductIds.Contains(p.ProductId),
                 TimeAgo = p.CreatedAt?.ToString("dd/MM") ?? ""
             }).ToList();
 
-            ViewBag.Keyword = query; // Để hiện lại câu "Kết quả tìm kiếm cho: ..."
+            ViewBag.Keyword = query;
             return View(viewModel);
         }
     }

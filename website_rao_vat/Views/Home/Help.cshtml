@@ -1,0 +1,45 @@
+﻿@{
+    ViewData["Title"] = "Trung tâm trợ giúp";
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <h2 class="fw-bold mb-4 text-center">Chúng tôi có thể giúp gì cho bạn?</h2>
+
+            <div class="accordion shadow-sm rounded-4 overflow-hidden" id="faqAccordion">
+                <div class="accordion-item border-0">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#q1">
+                            Làm sao để tôi đăng tin bán hàng?
+                        </button>
+                    </h2>
+                    <div id="q1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-secondary">
+                            Ninh hướng dẫn: Ông chỉ cần đăng nhập, bấm vào nút <strong>Đăng tin</strong> màu xanh ở góc phải trên cùng, điền đầy đủ thông tin và hình ảnh là xong!
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item border-0 border-top">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#q2">
+                            Mua hàng trên RaoVatDonGian có an toàn không?
+                        </button>
+                    </h2>
+                    <div id="q2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-secondary">
+                            Chúng tôi luôn khuyến cáo ông nên kiểm tra hàng trực tiếp và không chuyển khoản trước cho người lạ để đảm bảo an toàn tuyệt đối.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-5 p-4 bg-primary bg-opacity-10 rounded-4 text-center">
+                <h5 class="fw-bold">Vẫn cần hỗ trợ?</h5>
+                <p class="text-secondary small">Đội ngũ của Ninh luôn sẵn sàng giúp đỡ ông 24/7.</p>
+                <a href="mailto:support@ninhRaoVatDonGian.com" class="btn btn-primary rounded-pill px-4">Gửi email cho chúng tôi</a>
+            </div>
+        </div>
+    </div>
+</div>

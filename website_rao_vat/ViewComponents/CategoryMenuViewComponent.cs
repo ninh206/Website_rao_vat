@@ -4,7 +4,14 @@ using website_rao_vat.Data;
 
 namespace website_rao_vat.ViewComponents
 {
-    // Tên class BẮT BUỘC phải có chữ ViewComponent ở cuối
+    // 1. "Cái khuôn" nhỏ nằm ngay trong file này luôn nè Ninh
+    public class CategoryWithCount
+    {
+        public int CategoryId { get; set; }
+        public string CategoryName { get; set; }
+        public int Count { get; set; }
+    }
+
     public class CategoryMenuViewComponent : ViewComponent
     {
         private readonly DataBaseWebRaoVatContext _context;
@@ -16,11 +23,19 @@ namespace website_rao_vat.ViewComponents
 
         public async Task<IViewComponentResult> InvokeAsync()
         {
-            // Lấy danh sách danh mục từ DB
-            var categories = await _context.Categories.ToListAsync();
+            // 2. Thay vì ToList đơn thuần, mình dùng Select để nhồi dữ liệu vào khuôn
+            var model = await _context.Categories
+                .Select(c => new CategoryWithCount
+                {
+                    CategoryId = c.CategoryId,
+                    CategoryName = c.CategoryName,
+                    // Đếm trực tiếp số tin đăng của từng danh mục
+                    Count = _context.Products.Count(p => p.CategoryId == c.CategoryId)
+                })
+                .ToListAsync();
 
-            // Nó sẽ tự động tìm đến file Default.cshtml trong folder CategoryMenu của ông
-            return View(categories);
+            // Trả về danh sách đã có số lượng
+            return View(model);
         }
     }
 }

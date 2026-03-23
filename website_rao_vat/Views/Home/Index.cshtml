@@ -1,142 +1,187 @@
-﻿@model IEnumerable<website_rao_vat.Models.ProductDisplayViewModel>
+﻿@model website_rao_vat.Models.ProductListViewModel
 @using Microsoft.AspNetCore.Http
-@inject IHttpContextAccessor HttpContextAccessor
 
 @{
-    ViewData["Title"] = "Trang chủ - Classifieds";
-    var userRole = HttpContextAccessor.HttpContext.Session.GetString("UserRole");
+    ViewData["Title"] = "Trang chủ - Rao Vặt";
 }
 
 <style>
-    /* Hero Section kiểu mới - Sáng và hiện đại */
+    /* Giữ nguyên các Style của Ninh */
     .hero-light {
-        background: linear-gradient(135.44deg, #e0eafc 0%, #cfdef3 100%);
-        padding: 80px 0;
-        border-radius: 0 0 50px 50px;
-        margin-bottom: 50px;
+        background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+        padding: 60px 0;
+        border-radius: 0 0 40px 40px;
     }
 
-    .search-box-client {
-        background: #ffffff;
-        padding: 15px;
+    .filter-bar {
+        background: #fff;
+        padding: 20px;
         border-radius: 15px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-        max-width: 800px;
-        margin: 0 auto;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
     }
 
-    .section-title {
-        position: relative;
-        padding-bottom: 10px;
+    .product-list-card {
+        transition: 0.3s;
+        border: 1px solid #eee !important;
+        margin-bottom: 15px;
     }
 
-        .section-title::after {
-            content: "";
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 45px;
-            height: 4px;
-            background: #0d6efd;
-            border-radius: 10px;
-        }
+    .product-list-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.08) !important;
+        border-color: #0d6efd !important;
+    }
+
+    .product-img-container {
+        width: 240px;
+        height: 180px;
+        flex-shrink: 0;
+        overflow: hidden;
+    }
+
+    .product-img-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .text-truncate-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        color: #6c757d;
+        font-size: 0.9rem;
+        min-height: 2.7rem;
+    }
+
+    .price-large {
+        font-size: 1.4rem;
+        color: #0d6efd;
+        font-weight: 800;
+    }
+
+    /* Phân trang */
+    .page-item.active .page-link {
+        background-color: #0d6efd;
+        color: white;
+        border: none;
+    }
+
+    .page-link {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #666;
+        transition: 0.2s;
+    }
+
+    .page-link:hover {
+        background-color: #e9ecef;
+    }
 </style>
 
-@* 1. PHẦN HERO SECTION (BANNER SÁNG) *@
-<section class="hero-light text-center">
-    <div class="container">
-        <h1 class="display-5 fw-bold text-dark mb-3">Tìm mọi thứ bạn cần tại địa phương</h1>
-        <p class="text-secondary mb-5 fs-5">Tham gia cộng đồng mua bán rao vặt an toàn, tin cậy.</p>
+@* Dòng này cực kỳ quan trọng để JS lấy được Token bảo mật *@
+@Html.AntiForgeryToken()
 
-        @* Thanh tìm kiếm to ở giữa trang chủ *@
-        <form class="search-box-client d-flex gap-2" asp-controller="Home" asp-action="Search" method="get">
-            <div class="input-group flex-grow-1">
-                <span class="input-group-text bg-white border-0 text-muted"><i class="bi bi-search"></i></span>
-                <input type="text" name="query" class="form-control border-0 shadow-none" placeholder="Bạn đang tìm kiếm món đồ gì?">
+<div class="container mt-4">
+    @* 2. THANH BỘ LỌC *@
+    <div class="filter-bar mb-4">
+        <form method="get" class="row g-3 align-items-center">
+            <div class="col-md-3">
+                <h5 class="fw-bold mb-0">Tin đăng mới nhất</h5>
             </div>
-            <button type="submit" class="btn btn-primary px-4 fw-bold rounded-3">TÌM KIẾM</button>
+            <div class="col-md-9 d-flex gap-2 justify-content-md-end">
+                <input type="hidden" name="query" value="@Context.Request.Query["query"]" />
+
+                <select name="location" class="form-select border-0 bg-light rounded-pill px-3 shadow-none" style="width: 160px;" onchange="this.form.submit()">
+                    <option value="">Toàn quốc</option>
+                    <option value="Hà Nội" selected='@(Context.Request.Query["location"] == "Hà Nội")'>Hà Nội</option>
+                    <option value="TP. HCM" selected='@(Context.Request.Query["location"] == "TP. HCM")'>TP. HCM</option>
+                    <option value="Hải Phòng" selected='@(Context.Request.Query["location"] == "Hải Phòng")'>Hải Phòng</option>
+                </select>
+
+                <select name="sortBy" class="form-select border-0 bg-light rounded-pill px-3 shadow-none" style="width: 200px;" onchange="this.form.submit()">
+                    <option value="newest" selected='@(Context.Request.Query["sortBy"] == "newest")'>Ngày: Mới nhất</option>
+                    <option value="oldest" selected='@(Context.Request.Query["sortBy"] == "oldest")'>Ngày: Cũ nhất</option>
+                    <option value="price_asc" selected="@(Context.Request.Query["sortBy"] == "price_asc")">Giá: Thấp đến Cao</option>
+                    <option value="price_desc" selected="@(Context.Request.Query["sortBy"] == "price_desc")">Giá: Cao đến Thấp</option>
+                </select>
+            </div>
         </form>
     </div>
-</section>
 
-<div class="container">
-    @* 2. PHẦN DANH MỤC (GỌI VIEWCOMPONENT) *@
-    <div class="mb-5">
-        <h4 class="fw-bold text-dark section-title mb-4">Danh mục phổ biến</h4>
-        @await Component.InvokeAsync("CategoryMenu")
-    </div>
-
-    @* 3. DANH SÁCH TIN ĐĂNG (GỌI PARTIAL VIEW) *@
-    <div class="mb-5">
-        <div class="d-flex justify-content-between align-items-end mb-4">
-            <div>
-                <h4 class="fw-bold text-dark section-title mb-0">Tin đăng mới nhất</h4>
-            </div>
-            <a href="@Url.Action("Search", "Home")" class="btn btn-link text-primary text-decoration-none fw-bold p-0">
-                Xem tất cả <i class="bi bi-chevron-right small"></i>
-            </a>
-        </div>
-
-        <div class="row g-4">
-            @if (Model != null && Model.Any())
+    @* 3. DANH SÁCH TIN ĐĂNG *@
+    <div class="row g-1">
+        @if (Model.Products != null && Model.Products.Any())
+        {
+            @foreach (var item in Model.Products)
             {
-                @foreach (var item in Model)
-                {
-                    <div class="col-6 col-md-4 col-lg-3">
-                        @* Sử dụng Partial View để hiển thị từng Card sản phẩm *@
-                        <partial name="_ProductCard" model="item" />
-                    </div>
-                }
+                        <div class="col-12">
+                            <div class="card product-list-card rounded-4 overflow-hidden border-0 shadow-sm">
+                                <div class="d-flex flex-column flex-md-row">
+                                    <div class="product-img-container">
+                                        <img src="@(item.ImageUrl ?? "/images/no-image.png")" alt="@item.Title">
+                                    </div>
+
+                                    <div class="card-body d-flex flex-column justify-content-between p-4">
+                                        <div>
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <h5 class="fw-bold mb-1">
+                                                    <a href="@Url.Action("Details", "Home", new { id = item.ProductId })" class="text-dark text-decoration-none">@item.Title</a>
+                                                </h5>
+
+                                        @* ĐÃ SỬA: Bỏ vòng for thừa, dùng trực tiếp IsFavorite từ item *@
+                                                <button class="btn btn-favorite border-0 p-0" data-id="@item.ProductId">
+                                                    <i class="bi @(item.IsFavorite ? "bi-heart-fill text-danger" : "bi-heart text-secondary") fs-5"></i>
+                                                </button>
+                                            </div>
+                                            <div class="price-large">@string.Format("{0:N0}", item.Price) đ</div>
+                                            <p class="text-truncate-2 mt-2">@item.Description</p>
+                                        </div>
+
+                                        <div class="d-flex justify-content-between align-items-center mt-3">
+                                            <div class="d-flex gap-4 text-secondary small">
+                                                <span><i class="bi bi-geo-alt me-1"></i> @item.Location</span>
+                                                <span><i class="bi bi-clock me-1"></i> @item.TimeAgo</span>
+                                            </div>
+                                            <a href="@Url.Action("Details", "Home", new { id = item.ProductId })" class="btn btn-outline-primary rounded-pill px-4 fw-bold btn-sm">Xem chi tiết</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
             }
-            else
+
+            @* 4. THANH PHÂN TRANG *@
+            @if (Model.TotalPages > 1)
             {
-                <div class="col-12 text-center py-5">
-                    <div class="bg-white p-5 rounded-4 shadow-sm border border-dashed">
-                        <i class="bi bi-inbox text-muted display-4"></i>
-                        <p class="text-muted mt-3">Hiện tại chưa có tin đăng nào mới.</p>
-                        <a asp-controller="Ads" asp-action="Post" class="btn btn-primary btn-sm mt-2">Đăng tin ngay</a>
-                    </div>
+                        <nav class="mt-5 mb-5">
+                            <ul class="pagination justify-content-center">
+                        @for (int i = 1; i <= Model.TotalPages; i++)
+                        {
+                                        <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                            <a class="page-link rounded-circle mx-1 border-0 shadow-sm"
+                                               href="@Url.Action("Index", new {
+                                       page = i,
+                                       query = Context.Request.Query["query"],
+                                       location = Context.Request.Query["location"],
+                                       sortBy = Context.Request.Query["sortBy"]
+                                   })">@i</a>
+                                        </li>
+                        }
+                            </ul>
+                        </nav>
+            }
+        }
+        else
+        {
+                <div class="text-center py-5">
+                    <i class="bi bi-search display-1 text-muted"></i>
+                    <p class="mt-3 text-muted">Không tìm thấy sản phẩm nào phù hợp!</p>
                 </div>
-            }
-        </div>
+        }
     </div>
 </div>
-@section Scripts {
-    <script>
-        $(document).on("click", ".btn-favorite, .btn-add-cart", function (e) {
-            e.preventDefault();
-            
-            // Check Session từ C# đẩy ra JS
-            var userId = '@Context.Session.GetString("UserId")';
-
-            // Nếu chưa đăng nhập thì "đá" ra trang Login
-            if (!userId || userId === '') {
-                alert("Ninh nhắc: Ông phải đăng nhập mới dùng được cái này!");
-                window.location.href = "/Account/Login";
-                return;
-            }
-
-            var btn = $(this);
-            var pId = btn.data("id");
-
-            // Xử lý Thả tim
-            if (btn.hasClass("btn-favorite")) {
-                $.post("/Ads/ToggleFavorite", { productId: pId }, function (data) {
-                    if (data.success) {
-                        var icon = btn.find("i");
-                        if (data.isFavorite) {
-                            icon.removeClass("bi-heart text-secondary").addClass("bi-heart-fill text-danger");
-                        } else {
-                            icon.removeClass("bi-heart-fill text-danger").addClass("bi-heart text-secondary");
-                        }
-                    }
-                });
-            }
-
-            // Xử lý Giỏ hàng (Ông viết thêm Controller Cart tương tự nhé)
-            if (btn.hasClass("btn-add-cart")) {
-                alert("Đã thêm vào giỏ hàng! (Ninh viết tiếp Logic ở CartController nhé)");
-            }
-        });
-    </script>
-}
